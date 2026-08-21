@@ -503,11 +503,11 @@
             }
         }
 
-        async function generateWorkoutWithAI() {
-            const rationaleEl = document.getElementById('ai-rationale');
-            rationaleEl.innerText = "Analisi del tuo percorso e creazione scheda evolutiva quotidiana...";
+async function generateWorkoutWithAI() {
+    const rationaleEl = document.getElementById('ai-rationale');
+    rationaleEl.innerText = "Analisi del tuo percorso e creazione scheda evolutiva quotidiana...";
 
-            const prompt = `Sei un Personal Trainer professionista e preparatore atletico.
+    const prompt = `Sei un Personal Trainer professionista e preparatore atletico.
 Genera una scheda di allenamento adattiva ed EVOLUTIVA per la giornata di oggi.
 
 PROFILO UTENTE ED EVOLUZIONE:
@@ -536,6 +536,39 @@ Rispondi ESCLUSIVAMENTE con un JSON puro valido (senza markdown o altro testo):
     {"name": "Nome Esercizio", "qty": "10-15", "unit": "rep / sec / min", "desc": "Chiara spiegazione dell'esecuzione corretta."}
   ]
 }`;
+
+    try {
+        const res = await fetch(GEMINI_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: prompt })
+        });
+
+        // Verifica se il server Cloud Run ha restituito errore (es. 500 o 404)
+        if (!res.ok) {
+            throw new Error(`Errore Server Backend: Status ${res.status}`);
+        }
+
+        const data = await res.json();
+        let rawText = (data.text || data.response || "").replace(/```json/g, "").replace(/```/g, "").trim();
+        
+        if (!rawText) throw new Error("Risposta vuota dall'AI");
+
+        const parsedScheme = JSON.parse(rawText);
+        
+        appData.currentWorkoutScheme = parsedScheme;
+        saveToCloud();
+        renderWorkoutScheme(parsedScheme);
+
+    } catch (err) {
+        console.error("Errore generazione AI:", err);
+        renderWorkoutScheme({
+            rationale: "Impossibile contattare il servizio AI (Errore 500). Scheda di ripristino temporanea.",
+            warmup: [{ name: "Circonduzioni Spalle", qty: "30", unit: "sec", desc: "Ruota le spalle in modo fluido mantenendo la postura eretta." }],
+            workout: [{ name: "Squat a corpo libero", qty: "12", unit: "rep", desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro." }]
+        });
+    }
+}
 
             try {
                 const res = await fetch(GEMINI_ENDPOINT, {
