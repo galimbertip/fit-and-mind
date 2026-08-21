@@ -3,14 +3,17 @@
 <head>
     <!-- 
       Fit & Mind - Web App
-      Versione: v1.1.0 (PG Edition)
-      Descrizione: Allenamento dinamico, Meditazione guidata, Profilo utente con tara abbigliamento per calcolo peso netto ed IMC.
+      Versione: v1.2.0 (PG Edition)
+      Novità: Auto-logout per inattività, Tracciamento Stato Mentale & Umore, Favicon PWA integrata.
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind (PG Edition v1.1.0)</title>
+    <title>Fit & Mind (PG Edition v1.2.0)</title>
     <meta name="theme-color" content="#121212">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/isometric-headers/180/dumbbell.png">
+    
+    <!-- Icone per PWA / Scorciatoia Schermata Home -->
+    <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
     
     <style>
         :root {
@@ -136,7 +139,6 @@
         .sync-online { background-color: #2e7d32; color: #fff; }
         .sync-offline { background-color: #c62828; color: #fff; }
 
-        /* Modal & Form Stylings */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -168,7 +170,6 @@
         }
     </style>
 
-    <!-- Firebase Compat SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
@@ -176,14 +177,14 @@
 
     <header>
         <h1>FIT & MIND <span style="font-size: 0.7rem; color: #888;">PG Edition</span></h1>
-        <div class="subtitle" id="user-header-name">Caricamento profilo...</div>
+        <div class="subtitle" id="user-header-name">In attesa di Login...</div>
         <div id="sync-badge" class="sync-status-badge sync-offline">Connessione...</div>
     </header>
 
     <nav>
         <button id="nav-workout" class="active" onclick="switchTab('workout')">Allenamento</button>
         <button id="nav-meditation" onclick="switchTab('meditation')">Meditazione</button>
-        <button id="nav-stats" onclick="switchTab('stats')">Profilo & IMC</button>
+        <button id="nav-stats" onclick="switchTab('stats')">Profilo & Mind</button>
     </nav>
 
     <main>
@@ -246,14 +247,22 @@
         <!-- TAB PROFILO & STATISTICHE -->
         <div id="tab-stats" class="tab-content">
             <div class="card">
-                <h2>Profilo & Parametri Corporei</h2>
+                <h2>Profilo Fisico & IMC</h2>
                 <div class="exercise-item"><span>Utente:</span><strong id="prof-name">-</strong></div>
                 <div class="exercise-item"><span>Età:</span><strong id="prof-age">-</strong></div>
                 <div class="exercise-item"><span>Altezza:</span><strong id="prof-height">-</strong></div>
                 <div class="exercise-item"><span>Ultimo Peso Netto:</span><strong id="prof-weight">-</strong></div>
                 <div class="exercise-item"><span>Indice IMC (BMI):</span><strong id="prof-bmi" style="color: var(--accent-meditation);">-</strong></div>
-                <div class="exercise-item"><span>Stile di Vita Fisico:</span><strong id="prof-lifestyle">-</strong></div>
-                <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Dati / Pesata</button>
+                <div class="exercise-item"><span>Stile di Vita:</span><strong id="prof-lifestyle">-</strong></div>
+            </div>
+
+            <div class="card">
+                <h2>🧠 Profilo Mentale & Benessere</h2>
+                <div class="exercise-item"><span>Umore / Stato d'Animo:</span><strong id="prof-mood" style="color: var(--accent);">-</strong></div>
+                <div class="exercise-item"><span>Qualità del Sonno:</span><strong id="prof-sleep">-</strong></div>
+                <div class="exercise-item"><span>Livello Energia:</span><strong id="prof-energy">-</strong></div>
+                <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Dati Fisici & Mentali</button>
+                <button class="btn btn-secondary" style="margin-top: 8px; background: #555;" onclick="logout()">Logout immediato</button>
             </div>
 
             <div class="card">
@@ -268,11 +277,11 @@
     <!-- MODALE REGISTRAZIONE / EDIT PROFILO -->
     <div id="profile-modal" class="modal-overlay" style="display:none;">
         <div class="card" style="max-width: 480px; width: 90%; max-height: 90vh; overflow-y: auto;">
-            <h2>Dati Profilo & Pesata</h2>
+            <h2>Profilo Completo (Fisico & Mind)</h2>
             
             <div class="form-group">
                 <label>Nome Utente ID:</label>
-                <input type="text" id="input-username" value="paolo">
+                <input type="text" id="input-username" placeholder="es. paolo">
             </div>
 
             <div class="form-group">
@@ -291,6 +300,40 @@
                     <option value="Sedentario">Sedentario</option>
                     <option value="Moderatamente Attivo" selected>Moderatamente Attivo</option>
                     <option value="Molto Attivo">Molto Attivo</option>
+                </select>
+            </div>
+
+            <hr style="border-color: #333; margin: 15px 0;">
+            <h3 style="font-size: 0.95rem; color: var(--accent-meditation);">🧠 Stato d'Animo & Benessere Mentale</h3>
+
+            <div class="form-group">
+                <label>Stato d'Animo attuale:</label>
+                <select id="input-mood">
+                    <option value="Sereno / Equilibrato">Sereno / Equilibrato</option>
+                    <option value="Energico / Motivato">Energico / Motivato</option>
+                    <option value="Stressato / In ansia">Stressato / In ansia</option>
+                    <option value="Stanco / Affaticato">Stanco / Affaticato</option>
+                    <option value="Triste / Giù di morale">Triste / Giù di morale</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Qualità del Sonno (da 1 a 5):</label>
+                <select id="input-sleep">
+                    <option value="1/5 - Pessimo">1/5 - Pessimo</option>
+                    <option value="2/5 - Scarso">2/5 - Scarso</option>
+                    <option value="3/5 - Discreto" selected>3/5 - Discreto</option>
+                    <option value="4/5 - Buono">4/5 - Buono</option>
+                    <option value="5/5 - Eccellente">5/5 - Eccellente</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Livello Energetico Percepitivo:</label>
+                <select id="input-energy">
+                    <option value="Basso (Batteria 20%)">Basso (Batteria 20%)</option>
+                    <option value="Medio (Batteria 50%)" selected>Medio (Batteria 50%)</option>
+                    <option value="Alto (Batteria 100%)">Alto (Batteria 100%)</option>
                 </select>
             </div>
 
@@ -326,7 +369,7 @@
     </div>
 
     <footer>
-        v1.1.0 - PG Edition | Developed for Personal Training & Mind
+        v1.2.0 - PG Edition | Developed for Personal Training & Mind
     </footer>
 
     <script>
@@ -344,16 +387,19 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        let currentUsername = localStorage.getItem('fm_user') || 'paolo';
-        let userRef = db.ref('user_profile/' + currentUsername);
+        let currentUsername = localStorage.getItem('fm_user');
+        let userRef = null;
 
         let appData = {
-            username: 'paolo',
+            username: '',
             dob: '',
             height: 175,
             grossWeight: 75,
             netWeight: 75,
             lifestyle: 'Moderatamente Attivo',
+            mood: 'Sereno / Equilibrato',
+            sleep: '3/5 - Discreto',
+            energy: 'Medio (Batteria 50%)',
             levelMultiplier: 1.0,
             totalWorkouts: 0,
             totalMeditations: 0
@@ -367,8 +413,43 @@
             { name: "Affondi posteriori alternati", baseRep: 10, unit: "rep/gamba" }
         ];
 
-        // Sincronizzazione Realtime
+        // --- SISTEMA AUTO LOGOUT PER INATTIVITÀ (15 minuti) ---
+        let inactivityTimer;
+        const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 Minuti in millisecondi
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            if (currentUsername) {
+                inactivityTimer = setTimeout(() => {
+                    alert("Sessione scaduta per inattività. Effettua nuovamente l'accesso per tutelare la tua privacy.");
+                    logout();
+                }, INACTIVITY_TIMEOUT);
+            }
+        }
+
+        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer, true);
+        });
+
+        function logout() {
+            localStorage.removeItem('fm_user');
+            currentUsername = null;
+            location.reload();
+        }
+
+        // Init App & Sync
+        function initApp() {
+            if (!currentUsername) {
+                openProfileModal();
+            } else {
+                userRef = db.ref('user_profile/' + currentUsername);
+                initFirebaseSync();
+            }
+            resetInactivityTimer();
+        }
+
         function initFirebaseSync() {
+            if (!userRef) return;
             userRef.on('value', (snapshot) => {
                 const data = snapshot.val();
                 if (data) {
@@ -384,9 +465,11 @@
         }
 
         function saveToCloud() {
-            userRef.set(appData)
-                .then(() => updateBadge("Sincronizzato Cloud", true))
-                .catch(() => updateBadge("Errore Salvataggio", false));
+            if (userRef) {
+                userRef.set(appData)
+                    .then(() => updateBadge("Sincronizzato Cloud", true))
+                    .catch(() => updateBadge("Errore Salvataggio", false));
+            }
         }
 
         function updateBadge(text, isOnline) {
@@ -396,10 +479,10 @@
         }
 
         function renderAllUI() {
-            document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername).toUpperCase();
+            document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || 'Ospite').toUpperCase();
             document.getElementById('current-level-display').innerText = "Intensità x" + (appData.levelMultiplier || 1.0).toFixed(1);
 
-            // Render tabella esercizi
+            // Render esercizi
             const list = document.getElementById('workout-list');
             list.innerHTML = '';
             let mult = appData.levelMultiplier || 1.0;
@@ -411,14 +494,18 @@
                 list.appendChild(div);
             });
 
-            // Render sezione Profilo
-            document.getElementById('prof-name').innerText = appData.username || 'paolo';
+            // Render sezione Profilo Fisico & Mentale
+            document.getElementById('prof-name').innerText = appData.username || '-';
             document.getElementById('prof-age').innerText = calculateAge(appData.dob) + " anni";
             document.getElementById('prof-height').innerText = (appData.height || 0) + " cm";
             document.getElementById('prof-weight').innerText = (appData.netWeight || 0).toFixed(1) + " kg";
             document.getElementById('prof-lifestyle').innerText = appData.lifestyle || '-';
             
-            // Calcolo IMC (BMI)
+            document.getElementById('prof-mood').innerText = appData.mood || '-';
+            document.getElementById('prof-sleep').innerText = appData.sleep || '-';
+            document.getElementById('prof-energy').innerText = appData.energy || '-';
+
+            // IMC
             if (appData.height && appData.netWeight) {
                 let hM = appData.height / 100;
                 let bmi = (appData.netWeight / (hM * hM)).toFixed(1);
@@ -455,7 +542,6 @@
             }
         }
 
-        // Calcolo Peso e Tara Abbigliamento
         function calculateNetWeight() {
             let gross = parseFloat(document.getElementById('input-gross-weight').value) || 0;
             let tare = 0;
@@ -468,11 +554,14 @@
         }
 
         function openProfileModal() {
-            document.getElementById('input-username').value = appData.username || currentUsername;
+            document.getElementById('input-username').value = appData.username || currentUsername || 'paolo';
             document.getElementById('input-dob').value = appData.dob || '';
             document.getElementById('input-height').value = appData.height || '';
             document.getElementById('input-gross-weight').value = appData.grossWeight || '';
             document.getElementById('input-lifestyle').value = appData.lifestyle || 'Moderatamente Attivo';
+            document.getElementById('input-mood').value = appData.mood || 'Sereno / Equilibrato';
+            document.getElementById('input-sleep').value = appData.sleep || '3/5 - Discreto';
+            document.getElementById('input-energy').value = appData.energy || 'Medio (Batteria 50%)';
             calculateNetWeight();
             document.getElementById('profile-modal').style.display = 'flex';
         }
@@ -487,6 +576,9 @@
             appData.grossWeight = gross;
             appData.netWeight = net;
             appData.lifestyle = document.getElementById('input-lifestyle').value;
+            appData.mood = document.getElementById('input-mood').value;
+            appData.sleep = document.getElementById('input-sleep').value;
+            appData.energy = document.getElementById('input-energy').value;
 
             if (newUsername !== currentUsername) {
                 currentUsername = newUsername;
@@ -501,7 +593,6 @@
             renderAllUI();
         }
 
-        // Navigazione Tab
         function switchTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('nav button').forEach(el => {
@@ -529,7 +620,7 @@
             renderAllUI();
         }
 
-        // Timer e Guida Meditazione
+        // Timer e Meditazione
         let meditationInterval = null;
         let meditationSeconds = 300;
         let isMeditating = false;
@@ -589,8 +680,7 @@
                 `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // Avvio sincronizzazione
-        initFirebaseSync();
+        initApp();
     </script>
 </body>
 </html>
