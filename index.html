@@ -4,7 +4,7 @@
     <!-- 
       Fit & Mind - Web App
       Versione: v1.4.0 (PG Edition)
-      Novità: Guida illustrata per ogni esercizio (Tasto ℹ️), Musica di sottofondo per Meditazione.
+      Novità: Guida illustrata per ogni esercizio (Tasto ℹ️), Musica di sottofondo per Meditazione, Cloud Function Gemini integrata.
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -332,6 +332,15 @@
                 <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Dati Fisici & Mentali</button>
             </div>
 
+            <!-- CARD AI GEMINI GENERATOR -->
+            <div class="card" style="border: 1px solid var(--accent-meditation);">
+                <h2 style="color: var(--accent-meditation);">✨ Frase Motivazionale AI (Gemini)</h2>
+                <p id="ai-motivation-text" style="font-size: 0.85rem; color: #ddd; font-style: italic;">
+                    Clicca il pulsante sotto per generare un pensiero personalizzato tramite la tua Cloud Function.
+                </p>
+                <button class="btn btn-meditation" onclick="fetchGeminiPrompt()">Genera Frase con Gemini</button>
+            </div>
+
             <div class="card">
                 <h2>Statistiche Sessioni</h2>
                 <div class="exercise-item"><span>Allenamenti completati:</span><strong id="total-workouts">0</strong></div>
@@ -467,22 +476,20 @@
     </footer>
 
     <script>
+        // CONFIGURAZIONE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDviQAQZ8FNfJsJz-Z-azgCR73l4CqThTs",
             authDomain: "fit-and-mind.firebaseapp.com",
-            
-            /* =========================================================================
-               INSERISCI QUI IL TUO ENDPOINT / URL FIREBASE DATABASE
-               Es: databaseURL: "https://fit-and-mind-default-rtdb.europe-west1.firebasedatabase.app"
-               ========================================================================= */
-            databaseURL: "https://generate-image-prompt-591471755393.europe-west1.run.app",
-            
+            databaseURL: "https://fit-and-mind-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "fit-and-mind",
             storageBucket: "fit-and-mind.firebasestorage.app",
             messagingSenderId: "591471755393",
             appId: "1:591471755393:web:b234ea3068fd57d319cd80",
             measurementId: "G-2898FX742E"
         };
+
+        // ENDPOINT CLOUD RUN (GEMINI)
+        const GEMINI_ENDPOINT = "https://generate-image-prompt-591471755393.europe-west1.run.app";
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
@@ -807,6 +814,30 @@
 
             document.getElementById('feedback-card').style.display = 'none';
             alert("Allenamento salvato! Moltiplicatore aggiornato a x" + mult.toFixed(1));
+        }
+
+        // --- INTEGRAZIONE CLOUD RUN / GEMINI ---
+        async function fetchGeminiPrompt() {
+            const outputEl = document.getElementById('ai-motivation-text');
+            outputEl.innerText = "Generazione in corso da Gemini...";
+
+            const customPrompt = `Crea una frase breve e molto motivante per l'allenamento basata su un utente con stato d'animo "${appData.mood || 'Carico'}" e livello energia "${appData.energy || 'Medio'}".`;
+
+            try {
+                const res = await fetch(GEMINI_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: customPrompt })
+                });
+
+                if (!res.ok) throw new Error("Errore chiamata HTTP: " + res.status);
+
+                const data = await res.json();
+                outputEl.innerText = `"${data.text || data.response || 'Nessuna risposta dal server'}"`;
+            } catch (err) {
+                console.error("Errore Gemini Cloud Run:", err);
+                outputEl.innerText = "Impossibile contattare la Cloud Function. Controlla la console del browser.";
+            }
         }
 
         // --- GESTIONE MEDITAZIONE E AUDIO ---
