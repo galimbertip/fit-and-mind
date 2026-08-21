@@ -1,18 +1,13 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- 
-      Fit & Mind - Web App
-      Versione: v2.0.0 (AI Adaptive Edition)
-      Novità: Generazione dinamica della scheda con Gemini AI basata su stato psicofisico e progressione.
-    -->
+    <!-- Fit & Mind v2.1 - Adaptive Workout & Mind Care -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind (AI Adaptive v2.0)</title>
+    <title>Fit & Mind</title>
     <meta name="theme-color" content="#121212">
     
     <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
     
     <style>
         :root {
@@ -29,184 +24,84 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column; align-items: center;
             min-height: 100vh;
         }
 
         header {
-            width: 100%;
-            max-width: 600px;
-            padding: 15px 20px;
-            box-sizing: border-box;
-            text-align: center;
-            border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 100%; max-width: 600px; padding: 15px 20px; box-sizing: border-box;
+            border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;
         }
 
-        .header-title-box { text-align: left; }
         h1 { margin: 0; font-size: 1.3rem; color: var(--accent); letter-spacing: 1px; }
         .subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
 
         .btn-logout-header {
-            background-color: #333;
-            color: #ff6b6b;
-            border: 1px solid #ff6b6b;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            cursor: pointer;
-            display: none;
+            background-color: #333; color: #ff6b6b; border: 1px solid #ff6b6b;
+            padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: none;
         }
 
-        nav {
-            display: none;
-            width: 100%;
-            max-width: 600px;
-            background-color: #1a1a1a;
-        }
-
+        nav { display: none; width: 100%; max-width: 600px; background-color: #1a1a1a; }
         nav button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            background: none;
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            font-weight: bold;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s;
+            flex: 1; padding: 12px; border: none; background: none;
+            color: var(--text-secondary); font-size: 0.95rem; font-weight: bold; cursor: pointer;
+            border-bottom: 3px solid transparent; transition: all 0.3s;
         }
-
         nav button.active { color: var(--text-primary); border-bottom-color: var(--accent); }
         nav button.active-meditation { border-bottom-color: var(--accent-meditation); }
 
-        main {
-            width: 100%;
-            max-width: 600px;
-            padding: 15px;
-            box-sizing: border-box;
-            flex: 1;
-        }
-
+        main { width: 100%; max-width: 600px; padding: 15px; box-sizing: border-box; flex: 1; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         .card {
-            background-color: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 18px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            background-color: var(--card-bg); border-radius: var(--border-radius);
+            padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-
-        .card h2 { margin-top: 0; font-size: 1.1rem; color: #fff; }
 
         .btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 12px 18px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 10px;
+            background-color: var(--accent); color: white; border: none; padding: 12px 18px;
+            border-radius: 8px; font-size: 0.95rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;
         }
-
         .btn-meditation { background-color: var(--accent-meditation); color: #121212; }
         .btn-secondary { background-color: #333; color: #fff; }
 
+        .section-title {
+            font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--accent-meditation); margin: 15px 0 8px 0; border-bottom: 1px solid #333; padding-bottom: 4px;
+        }
+
         .exercise-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #2a2a2a;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid #2a2a2a;
         }
         .exercise-item:last-child { border-bottom: none; }
 
         .info-btn {
-            background: #2a2a2a;
-            color: var(--accent-meditation);
-            border: 1px solid var(--accent-meditation);
-            border-radius: 50%;
-            width: 26px;
-            height: 26px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-left: 8px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            background: #2a2a2a; color: var(--accent-meditation); border: 1px solid var(--accent-meditation);
+            border-radius: 50%; width: 24px; height: 24px; font-size: 0.75rem; font-weight: bold; cursor: pointer; margin-left: 8px;
         }
 
-        .timer-display {
-            font-size: 2.8rem;
-            text-align: center;
-            font-weight: bold;
-            margin: 15px 0;
-            color: var(--accent-meditation);
-        }
-
-        .sync-status-badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            margin-top: 4px;
-        }
+        .timer-display { font-size: 2.8rem; text-align: center; font-weight: bold; margin: 15px 0; color: var(--accent-meditation); }
+        .sync-status-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; }
         .sync-online { background-color: #2e7d32; color: #fff; }
         .sync-offline { background-color: #c62828; color: #fff; }
 
         .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            display: flex; justify-content: center; align-items: center;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
 
         .form-group { margin-bottom: 12px; text-align: left; }
         .form-group label { display: block; font-size: 0.85rem; color: #ccc; margin-bottom: 4px; }
         .form-group input, .form-group select {
-            width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444;
-            background-color: #2a2a2a; color: white; box-sizing: border-box;
+            width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #444; background-color: #2a2a2a; color: white; box-sizing: border-box;
         }
-
-        .clothes-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            background: #181818;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-        }
-        .clothes-grid label { display: flex; align-items: center; gap: 5px; color: #bbb; cursor: pointer; }
-
-        #welcome-screen { text-align: center; padding: 30px 10px; }
-        #welcome-screen img { width: 100px; height: 100px; margin-bottom: 15px; }
 
         .ai-rationale-box {
-            background: #182828;
-            border-left: 4px solid var(--accent-meditation);
-            padding: 10px 12px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            color: #d1f2f0;
-            margin-bottom: 15px;
-            font-style: italic;
+            background: #182828; border-left: 4px solid var(--accent-meditation); padding: 10px 12px;
+            border-radius: 4px; font-size: 0.85rem; color: #d1f2f0; margin-bottom: 15px; font-style: italic;
         }
 
         footer { font-size: 0.75rem; color: #666; text-align: center; padding: 15px; margin-top: auto; }
@@ -218,8 +113,8 @@
 <body>
 
     <header>
-        <div class="header-title-box">
-            <h1>FIT & MIND <span style="font-size: 0.7rem; color: #888;">AI Edition</span></h1>
+        <div>
+            <h1>FIT & MIND</h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div>
@@ -229,44 +124,43 @@
     </header>
 
     <nav id="app-nav">
-        <button id="nav-workout" class="active" onclick="switchTab('workout')">Allenamento AI</button>
+        <button id="nav-workout" class="active" onclick="switchTab('workout')">Allenamento</button>
         <button id="nav-meditation" onclick="switchTab('meditation')">Meditazione</button>
-        <button id="nav-stats" onclick="switchTab('stats')">Profilo & Mind</button>
+        <button id="nav-stats" onclick="switchTab('stats')">Profilo & Stato</button>
     </nav>
 
     <main>
-        <!-- SCHERMATA DI BENVENUTO -->
-        <div id="welcome-screen" class="card">
-            <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Fit & Mind Logo">
-            <h2 style="font-size: 1.4rem; margin-bottom: 5px;">Benvenuto in Fit & Mind</h2>
-            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px;">
-                Adaptive Workout & Mind Care Powered by AI
-            </p>
-
+        <!-- BENVENUTO -->
+        <div id="welcome-screen" class="card" style="text-align: center; padding: 30px 10px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
+            <h2 style="margin-bottom: 5px;">Benvenuto in Fit & Mind</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px;">Adaptive Personal Training & Mind Care</p>
             <button class="btn" style="margin-bottom: 12px;" onclick="openLoginModal()">Accedi al tuo Profilo</button>
             <button class="btn btn-meditation" onclick="openRegisterModal()">Crea Nuovo Profilo</button>
         </div>
 
-        <!-- TAB ALLENAMENTO ADATTIVO -->
+        <!-- TAB ALLENAMENTO -->
         <div id="tab-workout" class="tab-content">
-            <div class="card" style="border: 1px solid var(--accent-meditation);">
+            <div class="card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h2 style="margin: 0; color: var(--accent-meditation);">✨ Scheda Generata da Gemini</h2>
-                    <button class="btn btn-meditation" style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.8rem;" onclick="generateWorkoutWithAI()">🔄 Rigenera</button>
+                    <h2 style="margin: 0;">Scheda Personalizzata</h2>
+                    <button class="btn btn-secondary" style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.8rem;" onclick="generateWorkoutWithAI()">🔄 Aggiorna</button>
                 </div>
                 
-                <div id="ai-rationale" class="ai-rationale-box">
-                    L'IA analizzerà il tuo stato psicofisico e lo storico per creare una scheda personalizzata...
-                </div>
+                <div id="ai-rationale" class="ai-rationale-box">Elaborazione del percorso in corso...</div>
 
+                <div class="section-title">1. Riscaldamento & Mobilità</div>
+                <div id="warmup-list"></div>
+
+                <div class="section-title">2. Circuito Principale</div>
                 <div id="workout-list"></div>
 
-                <button class="btn" style="margin-top: 15px;" onclick="completeWorkout()">Ho Completato l'Allenamento!</button>
+                <button class="btn" style="margin-top: 20px;" onclick="completeWorkout()">Ho Completato l'Allenamento!</button>
             </div>
 
             <div id="feedback-card" class="card" style="display: none;">
                 <h2>Com'è andata la sessione?</h2>
-                <p style="font-size: 0.8rem; color: #aaa;">L'IA terrà conto di questo feedback per sintonizzare i prossimi allenamenti.</p>
+                <p style="font-size: 0.8rem; color: #aaa;">Il feedback permette all'app di calibrare la difficoltà della prossima scheda.</p>
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
                     <button class="btn btn-secondary" onclick="saveFeedbackAndAdjust('Troppo Duro')">Troppo Duro</button>
                     <button class="btn btn-secondary" onclick="saveFeedbackAndAdjust('Giusto')">Giusto</button>
@@ -278,23 +172,24 @@
         <!-- TAB MEDITAZIONE -->
         <div id="tab-meditation" class="tab-content">
             <div class="card">
-                <h2>Meditazione & Rilassamento</h2>
+                <h2>Meditazione & Mind Care</h2>
                 <div class="form-group">
-                    <label>Tipo di Sessione:</label>
-                    <select id="meditation-mode" onchange="resetMeditation()">
-                        <option value="guided">Guidata con Testo (Respiro & Mind)</option>
-                        <option value="free">Libera con Timer</option>
+                    <label>Obiettivo della Sessione:</label>
+                    <select id="meditation-type" onchange="updateMeditationConfig()">
+                        <option value="relax">Rilassamento & De-Stress (5 Minuti)</option>
+                        <option value="focus">Focus & Ricarica Energetica (3 Minuti)</option>
+                        <option value="sleep">Preparazione al Sonno (8 Minuti)</option>
                     </select>
                 </div>
 
                 <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
                     <input type="checkbox" id="music-toggle" checked style="width: auto;">
-                    <label for="music-toggle" style="margin: 0; cursor: pointer;">🎵 Musica rilassante di sottofondo</label>
+                    <label for="music-toggle" style="margin: 0; cursor: pointer;">🎵 Musica di sottofondo (Suoni della Natura)</label>
                 </div>
 
                 <div class="timer-display" id="meditation-timer">05:00</div>
-                <p id="meditation-instruction" style="text-align: center; color: var(--accent-meditation); font-weight: bold; min-height: 40px;">
-                    Premi avvia per iniziare.
+                <p id="meditation-instruction" style="text-align: center; color: var(--accent-meditation); font-weight: bold; min-height: 40px; padding: 0 10px;">
+                    Seleziona l'obiettivo e premi avvia.
                 </p>
                 
                 <div style="display: flex; gap: 10px;">
@@ -304,51 +199,50 @@
             </div>
         </div>
 
-        <!-- TAB PROFILO & STATISTICHE -->
+        <!-- TAB PROFILO & STATO -->
         <div id="tab-stats" class="tab-content">
             <div class="card">
-                <h2>Profilo Fisico & IMC</h2>
+                <h2>Profilo Fisico</h2>
                 <div class="exercise-item"><span>Utente:</span><strong id="prof-name">-</strong></div>
                 <div class="exercise-item"><span>Età:</span><strong id="prof-age">-</strong></div>
                 <div class="exercise-item"><span>Altezza:</span><strong id="prof-height">-</strong></div>
                 <div class="exercise-item"><span>Ultimo Peso Netto:</span><strong id="prof-weight">-</strong></div>
                 <div class="exercise-item"><span>Indice IMC (BMI):</span><strong id="prof-bmi" style="color: var(--accent-meditation);">-</strong></div>
-                <div class="exercise-item"><span>Stile di Vita:</span><strong id="prof-lifestyle">-</strong></div>
             </div>
 
             <div class="card">
-                <h2>🧠 Profilo Mentale & Benessere</h2>
-                <div class="exercise-item"><span>Umore / Stato d'Animo:</span><strong id="prof-mood" style="color: var(--accent);">-</strong></div>
-                <div class="exercise-item"><span>Qualità del Sonno:</span><strong id="prof-sleep">-</strong></div>
+                <h2>🧠 Stato Psicofisico Attuale</h2>
+                <div class="exercise-item"><span>Stato d'Animo:</span><strong id="prof-mood" style="color: var(--accent);">-</strong></div>
+                <div class="exercise-item"><span>Qualità Sonno:</span><strong id="prof-sleep">-</strong></div>
                 <div class="exercise-item"><span>Livello Energia:</span><strong id="prof-energy">-</strong></div>
-                <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Dati Fisici & Mentali</button>
+                <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Stato & Parametri</button>
             </div>
 
             <div class="card">
-                <h2>Statistiche & Storico AI</h2>
+                <h2>Storico & Progressione</h2>
                 <div class="exercise-item"><span>Allenamenti completati:</span><strong id="total-workouts">0</strong></div>
                 <div class="exercise-item"><span>Meditazioni completate:</span><strong id="total-meditations">0</strong></div>
-                <div class="exercise-item"><span>Ultimo Feedback Registrato:</span><strong id="last-feedback" style="color: var(--accent-meditation);">-</strong></div>
+                <div class="exercise-item"><span>Ultimo Feedback:</span><strong id="last-feedback" style="color: var(--accent-meditation);">-</strong></div>
             </div>
         </div>
     </main>
 
-    <!-- MODALE GUIDA ESERCIZIO (GIF) -->
+    <!-- MODALE GUIDA ESERCIZIO -->
     <div id="exercise-modal" class="modal-overlay" style="display:none;">
         <div class="card" style="max-width: 420px; width: 90%; text-align: center;">
             <h2 id="ex-modal-title">Guida Esercizio</h2>
-            <img id="ex-modal-img" src="" alt="Guida esercizio" style="width: 100%; max-height: 280px; object-fit: contain; border-radius: 8px; margin: 10px 0; background: #2a2a2a;">
+            <img id="ex-modal-img" src="" alt="Esercizio" style="width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; margin: 10px 0; background: #2a2a2a;">
             <p id="ex-modal-desc" style="font-size: 0.85rem; color: #ccc; text-align: left;"></p>
             <button class="btn btn-secondary" onclick="closeModal('exercise-modal')">Chiudi</button>
         </div>
     </div>
 
-    <!-- MODALE ACCESSO -->
+    <!-- MODALE LOGIN -->
     <div id="login-modal" class="modal-overlay" style="display:none;">
         <div class="card" style="max-width: 380px; width: 90%;">
-            <h2>Accedi al tuo Profilo</h2>
+            <h2>Accedi</h2>
             <div class="form-group">
-                <label>Inserisci il tuo Nome Utente ID:</label>
+                <label>ID Utente:</label>
                 <input type="text" id="login-username-input" placeholder="es. paolo">
             </div>
             <button class="btn" onclick="executeLogin()">Accedi</button>
@@ -356,110 +250,49 @@
         </div>
     </div>
 
-    <!-- MODALE REGISTRAZIONE / EDIT PROFILO -->
+    <!-- MODALE PROFILO -->
     <div id="profile-modal" class="modal-overlay" style="display:none;">
         <div class="card" style="max-width: 480px; width: 90%; max-height: 90vh; overflow-y: auto;">
-            <h2 id="modal-profile-title">Crea Nuovo Profilo</h2>
-            
+            <h2>Profilo & Stato Psicofisico</h2>
+            <div class="form-group"><label>ID Utente:</label><input type="text" id="input-username"></div>
+            <div class="form-group"><label>Data di Nascita:</label><input type="date" id="input-dob"></div>
+            <div class="form-group"><label>Altezza (cm):</label><input type="number" id="input-height"></div>
             <div class="form-group">
-                <label>Nome Utente ID:</label>
-                <input type="text" id="input-username" placeholder="es. paolo">
-            </div>
-
-            <div class="form-group">
-                <label>Data di Nascita:</label>
-                <input type="date" id="input-dob">
-            </div>
-
-            <div class="form-group">
-                <label>Altezza (cm):</label>
-                <input type="number" id="input-height" placeholder="175">
-            </div>
-
-            <div class="form-group">
-                <label>Stile di Vita Fisico:</label>
-                <select id="input-lifestyle">
-                    <option value="Sedentario">Sedentario</option>
-                    <option value="Moderatamente Attivo" selected>Moderatamente Attivo</option>
-                    <option value="Molto Attivo">Molto Attivo</option>
-                </select>
-            </div>
-
-            <hr style="border-color: #333; margin: 15px 0;">
-            <h3 style="font-size: 0.95rem; color: var(--accent-meditation);">🧠 Stato d'Animo & Benessere Mentale</h3>
-
-            <div class="form-group">
-                <label>Stato d'Animo attuale:</label>
+                <label>Stato d'Animo:</label>
                 <select id="input-mood">
                     <option value="Sereno / Equilibrato">Sereno / Equilibrato</option>
                     <option value="Energico / Motivato">Energico / Motivato</option>
                     <option value="Stressato / In ansia">Stressato / In ansia</option>
                     <option value="Stanco / Affaticato">Stanco / Affaticato</option>
-                    <option value="Triste / Giù di morale">Triste / Giù di morale</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label>Qualità del Sonno (da 1 a 5):</label>
+                <label>Qualità Sonno:</label>
                 <select id="input-sleep">
-                    <option value="1/5 - Pessimo">1/5 - Pessimo</option>
-                    <option value="2/5 - Scarso">2/5 - Scarso</option>
+                    <option value="1/5 - Scarso">1/5 - Scarso</option>
                     <option value="3/5 - Discreto" selected>3/5 - Discreto</option>
-                    <option value="4/5 - Buono">4/5 - Buono</option>
                     <option value="5/5 - Eccellente">5/5 - Eccellente</option>
                 </select>
             </div>
-
             <div class="form-group">
-                <label>Livello Energetico Percepitivo:</label>
+                <label>Energia Percepita:</label>
                 <select id="input-energy">
-                    <option value="Basso (Batteria 20%)">Basso (Batteria 20%)</option>
-                    <option value="Medio (Batteria 50%)" selected>Medio (Batteria 50%)</option>
-                    <option value="Alto (Batteria 100%)">Alto (Batteria 100%)</option>
+                    <option value="Bassa (20%)">Bassa (20%)</option>
+                    <option value="Media (50%)" selected>Media (50%)</option>
+                    <option value="Alta (100%)">Alta (100%)</option>
                 </select>
             </div>
-
-            <hr style="border-color: #333; margin: 15px 0;">
-
-            <div class="form-group">
-                <label><strong>Peso sulla Bilancia (Lordo in Kg):</strong></label>
-                <input type="number" step="0.1" id="input-gross-weight" placeholder="es. 78.5" oninput="calculateNetWeight()">
-            </div>
-
-            <div class="form-group">
-                <label>Seleziona i capi d'abbigliamento indossati:</label>
-                <div class="clothes-grid">
-                    <label><input type="checkbox" class="cloth-check" value="0.6" onchange="calculateNetWeight()"> Scarpe (-0.6kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.8" onchange="calculateNetWeight()"> Giubbotto (-0.8kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.5" onchange="calculateNetWeight()"> Felpa/Maglione (-0.5kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.2" onchange="calculateNetWeight()"> T-shirt/Polo (-0.2kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.1" onchange="calculateNetWeight()"> Maglietta intima (-0.1kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.5" onchange="calculateNetWeight()"> Pantalone lungo (-0.5kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.25" onchange="calculateNetWeight()"> Pantalone corto (-0.25kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.05" onchange="calculateNetWeight()"> Calze (-0.05kg)</label>
-                    <label><input type="checkbox" class="cloth-check" value="0.05" onchange="calculateNetWeight()"> Boxer/Slip (-0.05kg)</label>
-                </div>
-            </div>
-
-            <div style="background: #252525; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 12px;">
-                <span style="font-size: 0.85rem; color: #aaa;">Peso Netto Calcolato:</span><br>
-                <strong id="net-weight-display" style="font-size: 1.3rem; color: var(--accent-meditation);">0.0 Kg</strong>
-            </div>
-
-            <button class="btn" onclick="saveProfile()">Salva Profilo</button>
+            <button class="btn" onclick="saveProfile()">Salva Modifiche</button>
             <button class="btn btn-secondary" style="margin-top: 8px;" onclick="closeModal('profile-modal')">Chiudi</button>
         </div>
     </div>
 
-    <!-- AUDIO MEDITAZIONE -->
-    <audio id="meditation-audio" loop src="https://assets.mixkit.co/music/preview/mixkit-deep-meditation-109.mp3"></audio>
+    <!-- AUDIO MEDITAZIONE CON SORGENTE AFFIDABILE -->
+    <audio id="meditation-audio" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=meditation-relaxing-112191.mp3"></audio>
 
-    <footer>
-        v2.0.0 - AI Adaptive Edition | Developed for Personal Training & Mind
-    </footer>
+    <footer>v2.1 - Adaptive Workout & Mind Care</footer>
 
     <script>
-        // CONFIGURAZIONE FIREBASE REALTIME DATABASE
         const firebaseConfig = {
             apiKey: "AIzaSyDviQAQZ8FNfJsJz-Z-azgCR73l4CqThTs",
             authDomain: "fit-and-mind.firebaseapp.com",
@@ -467,86 +300,34 @@
             projectId: "fit-and-mind",
             storageBucket: "fit-and-mind.firebasestorage.app",
             messagingSenderId: "591471755393",
-            appId: "1:591471755393:web:b234ea3068fd57d319cd80",
-            measurementId: "G-2898FX742E"
+            appId: "1:591471755393:web:b234ea3068fd57d319cd80"
         };
 
-        // ENDPOINT CLOUD RUN (GEMINI API)
         const GEMINI_ENDPOINT = "https://generate-image-prompt-591471755393.europe-west1.run.app";
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        
         let currentUsername = localStorage.getItem('fm_user');
         let userRef = null;
 
         let appData = {
-            username: '',
-            dob: '',
-            height: '',
-            grossWeight: '',
-            netWeight: '',
-            lifestyle: 'Moderatamente Attivo',
-            mood: 'Sereno / Equilibrato',
-            sleep: '3/5 - Discreto',
-            energy: 'Medio (Batteria 50%)',
-            totalWorkouts: 0,
-            totalMeditations: 0,
-            lastFeedback: 'Nessuno',
-            currentWorkoutScheme: null
+            username: '', dob: '', height: '', netWeight: '75', mood: 'Sereno / Equilibrato',
+            sleep: '3/5 - Discreto', energy: 'Media (50%)', totalWorkouts: 0, totalMeditations: 0,
+            lastFeedback: 'Nessuno', currentWorkoutScheme: null
         };
 
-        // DIZIONARIO UFFICIALE DI ESERCIZI SUPPORTATI DALL'APP (CON GIF GARANTITE)
         const exerciseLibrary = {
-            "Piegamenti sulle ginocchia": {
-                unit: "rep",
-                img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Kneeling_push-up.gif",
-                desc: "Poggia le ginocchia a terra, mantieni il core ingaggiato e abbassa il petto verso il pavimento piegando i gomiti a 45 gradi."
-            },
-            "Squat a corpo libero": {
-                unit: "rep",
-                img: "https://upload.wikimedia.org/wikipedia/commons/8/82/Squat.gif",
-                desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro. Mantieni il petto alto e la schiena dritta."
-            },
-            "Plank isometrico": {
-                unit: "sec",
-                img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Plank_exercise.gif",
-                desc: "Poggia sugli avambracci e sulle punte dei piedi. Mantieni il corpo in linea retta senza far cedere il bacino."
-            },
-            "Crunch Addominali": {
-                unit: "rep",
-                img: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Crunch_exercise.gif",
-                desc: "Sdraiato sulla schiena, piega le ginocchia e solleva le spalle verso il bacino contraendo l'addome."
-            },
-            "Affondi posteriori": {
-                unit: "rep/gamba",
-                img: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Reverse_Lunge.gif",
-                desc: "Fai un passo indietro piegando entrambe le ginocchia a 90 gradi. Spingi sul piede anteriore per risalire."
-            }
+            "Circonduzioni Spalle": { unit: "sec", img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Kneeling_push-up.gif", desc: "Ruota lentamente le spalle prima in avanti e poi all'indietro per mobilitare l'articolazione." },
+            "Jumping Jacks Leggeri": { unit: "sec", img: "https://upload.wikimedia.org/wikipedia/commons/8/82/Squat.gif", desc: "Salta aprendo e chiudendo braccia e gambe in modo ritmico per alzare la temperatura corporea." },
+            "Cat-Cow (Mobilità Colonna)": { unit: "sec", img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Plank_exercise.gif", desc: "A quattrozampe, alterna l'incurvamento e l'estensione della colonna seguendo il respiro." },
+            "Piegamenti sulle ginocchia": { unit: "rep", img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Kneeling_push-up.gif", desc: "Poggia le ginocchia a terra e piega i gomiti portando il petto verso il pavimento." },
+            "Squat a corpo libero": { unit: "rep", img: "https://upload.wikimedia.org/wikipedia/commons/8/82/Squat.gif", desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro con la schiena dritta." },
+            "Plank isometrico": { unit: "sec", img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Plank_exercise.gif", desc: "Mantiens la posizione in appoggio sugli avambracci e sulle punte dei piedi." },
+            "Crunch Addominali": { unit: "rep", img: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Crunch_exercise.gif", desc: "Solleva le spalle da terra contraendo l'addome." },
+            "Affondi posteriori": { unit: "rep/gamba", img: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Reverse_Lunge.gif", desc: "Fai un passo indietro piegando le ginocchia a 90 gradi." }
         };
 
-        // --- INATTIVITÀ (15 min) ---
-        let inactivityTimer;
-        const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
-
-        function resetInactivityTimer() {
-            clearTimeout(inactivityTimer);
-            if (currentUsername) {
-                inactivityTimer = setTimeout(() => {
-                    alert("Sessione scaduta per inattività.");
-                    logout();
-                }, INACTIVITY_TIMEOUT);
-            }
-        }
-
-        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(e => document.addEventListener(e, resetInactivityTimer, true));
-
-        function logout() {
-            stopAudio();
-            localStorage.removeItem('fm_user');
-            currentUsername = null;
-            location.reload();
-        }
+        function logout() { localStorage.removeItem('fm_user'); location.reload(); }
 
         function initApp() {
             if (currentUsername) {
@@ -556,14 +337,12 @@
             } else {
                 showWelcomeUI();
             }
-            resetInactivityTimer();
         }
 
         function showWelcomeUI() {
             document.getElementById('welcome-screen').style.display = 'block';
             document.getElementById('app-nav').style.display = 'none';
             document.getElementById('btn-header-logout').style.display = 'none';
-            document.getElementById('user-header-name').innerText = "In attesa di Login";
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         }
 
@@ -574,14 +353,10 @@
             switchTab('workout');
         }
 
-        function openLoginModal() {
-            document.getElementById('login-username-input').value = '';
-            document.getElementById('login-modal').style.display = 'flex';
-        }
-
+        function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
         function executeLogin() {
             let input = document.getElementById('login-username-input').value.trim().toLowerCase();
-            if (!input) return alert("Inserisci un Nome Utente valido!");
+            if (!input) return alert("Inserisci ID valido");
             currentUsername = input;
             localStorage.setItem('fm_user', currentUsername);
             closeModal('login-modal');
@@ -591,16 +366,7 @@
         }
 
         function openRegisterModal() {
-            document.getElementById('modal-profile-title').innerText = "Crea Nuovo Profilo";
             document.getElementById('input-username').value = '';
-            document.getElementById('input-dob').value = '';
-            document.getElementById('input-height').value = '';
-            document.getElementById('input-gross-weight').value = '';
-            document.getElementById('input-lifestyle').value = 'Moderatamente Attivo';
-            document.getElementById('input-mood').value = 'Sereno / Equilibrato';
-            document.getElementById('input-sleep').value = '3/5 - Discreto';
-            document.getElementById('input-energy').value = 'Medio (Batteria 50%)';
-            calculateNetWeight();
             document.getElementById('profile-modal').style.display = 'flex';
         }
 
@@ -610,60 +376,33 @@
             if (!userRef) return;
             userRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    appData = { ...appData, ...data };
-                    updateBadge("Sincronizzato", true);
-                } else {
-                    saveToCloud();
-                }
+                if (data) appData = { ...appData, ...data };
                 renderAllUI();
-            }, () => updateBadge("Offline / Errore", false));
+            });
         }
 
-        function saveToCloud() {
-            if (userRef) {
-                userRef.set(appData)
-                    .then(() => updateBadge("Sincronizzato", true))
-                    .catch(() => updateBadge("Errore Cloud", false));
-            }
-        }
+        function saveToCloud() { if (userRef) userRef.set(appData); }
 
-        function updateBadge(text, isOnline) {
-            const badge = document.getElementById('sync-badge');
-            badge.innerText = text;
-            badge.className = "sync-status-badge " + (isOnline ? "sync-online" : "sync-offline");
-        }
-
-        // --- GENERAZIONE DINAMICA SCHEDA CON GEMINI ---
         async function generateWorkoutWithAI() {
             const rationaleEl = document.getElementById('ai-rationale');
-            const listEl = document.getElementById('workout-list');
-            rationaleEl.innerText = "🤖 Gemini sta analizzando il tuo stato psicofisico e lo storico...";
-            listEl.innerHTML = '<p style="text-align:center; color:#aaa;">Generazione scheda in corso...</p>';
+            rationaleEl.innerText = "Analisi parametri fisici e preparazione scheda...";
 
-            const availableNames = Object.keys(exerciseLibrary).join(", ");
-            const userAge = calculateAge(appData.dob);
+            const prompt = `Sei un Personal Trainer.
+Dati utente: Età ${calculateAge(appData.dob)}, Umore: ${appData.mood}, Sonno: ${appData.sleep}, Energia: ${appData.energy}, Allenamenti svolti: ${appData.totalWorkouts}, Ultimo Feedback: ${appData.lastFeedback}.
 
-            const prompt = `Sei un Personal Trainer AI integrato nell'app Fit & Mind.
-Dati utente:
-- Età: ${userAge} anni
-- IMC: ${document.getElementById('prof-bmi').innerText}
-- Umore attuale: ${appData.mood}
-- Qualità Sonno: ${appData.sleep}
-- Energia: ${appData.energy}
-- Allenamenti svolti finora: ${appData.totalWorkouts}
-- Feedback dell'ultima sessione: ${appData.lastFeedback}
+Lista esercizi autorizzati (usa solo questi): [${Object.keys(exerciseLibrary).join(", ")}]
 
-Esercizi consentiti (usa ESATTAMENTE ed ESCLUSIVAMENTE questi nomi):
-[${availableNames}]
-
-Crea una sessione di allenamento personalizzata scegliendo da 3 a 5 esercizi dalla lista sopra con target adeguati allo stato psicofisico.
-Rispondi RIGOROSAMENTE ed ESCLUSIVAMENTE in formato JSON valido, senza markdown, senza virgolette extra, strutturato così:
+Restituisci un JSON puro senza markdown:
 {
-  "rationale": "Breve frase motivazionale e spiegazione del perché hai scelto questa scheda oggi.",
-  "exercises": [
-    {"name": "Nome Esercizio Esatto", "qty": 10},
-    {"name": "Nome Esercizio Esatto", "qty": 30}
+  "rationale": "Spiegazione sintetica della scheda in base allo stato attuale dell'utente.",
+  "warmup": [
+    {"name": "Circonduzioni Spalle", "qty": 30},
+    {"name": "Cat-Cow (Mobilità Colonna)", "qty": 45}
+  ],
+  "workout": [
+    {"name": "Squat a corpo libero", "qty": 12},
+    {"name": "Piegamenti sulle ginocchia", "qty": 8},
+    {"name": "Plank isometrico", "qty": 20}
   ]
 }`;
 
@@ -673,29 +412,17 @@ Rispondi RIGOROSAMENTE ed ESCLUSIVAMENTE in formato JSON valido, senza markdown,
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt })
                 });
-
-                if (!res.ok) throw new Error("Errore chiamata HTTP: " + res.status);
                 const data = await res.json();
-                
-                let rawText = data.text || data.response || "";
-                rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
-                
+                let rawText = (data.text || data.response || "").replace(/```json/g, "").replace(/```/g, "").trim();
                 const parsedScheme = JSON.parse(rawText);
                 appData.currentWorkoutScheme = parsedScheme;
                 saveToCloud();
                 renderWorkoutScheme(parsedScheme);
-
             } catch (err) {
-                console.error("Errore generazione AI:", err);
-                rationaleEl.innerText = "⚠️ Scheda predefinita caricata (Impossibile contattare l'AI al momento).";
-                // Fallback automatico
                 renderWorkoutScheme({
-                    rationale: "Sessione standard equilibrata.",
-                    exercises: [
-                        { name: "Squat a corpo libero", qty: 12 },
-                        { name: "Piegamenti sulle ginocchia", qty: 10 },
-                        { name: "Plank isometrico", qty: 25 }
-                    ]
+                    rationale: "Scheda adattiva standard.",
+                    warmup: [{ name: "Circonduzioni Spalle", qty: 30 }, { name: "Cat-Cow (Mobilità Colonna)", qty: 45 }],
+                    workout: [{ name: "Squat a corpo libero", qty: 10 }, { name: "Plank isometrico", qty: 20 }]
                 });
             }
         }
@@ -703,159 +430,105 @@ Rispondi RIGOROSAMENTE ed ESCLUSIVAMENTE in formato JSON valido, senza markdown,
         function renderWorkoutScheme(scheme) {
             if (!scheme) return;
             document.getElementById('ai-rationale').innerText = `"${scheme.rationale}"`;
-            const list = document.getElementById('workout-list');
-            list.innerHTML = '';
+            
+            const renderList = (items, targetId) => {
+                const container = document.getElementById(targetId);
+                container.innerHTML = '';
+                (items || []).forEach(ex => {
+                    const lib = exerciseLibrary[ex.name] || { unit: "rep" };
+                    let div = document.createElement('div');
+                    div.className = 'exercise-item';
+                    div.innerHTML = `<div><span>${ex.name}</span><button class="info-btn" onclick="openExerciseInfo('${ex.name}')">i</button></div><strong>${ex.qty} ${lib.unit}</strong>`;
+                    container.appendChild(div);
+                });
+            };
 
-            scheme.exercises.forEach((ex) => {
-                const libData = exerciseLibrary[ex.name] || { unit: "rep", img: "", desc: "" };
-                let div = document.createElement('div');
-                div.className = 'exercise-item';
-                div.innerHTML = `
-                    <div>
-                        <span>${ex.name}</span>
-                        <button class="info-btn" onclick="openExerciseInfo('${ex.name}')">ℹ️</button>
-                    </div>
-                    <strong>${ex.qty} ${libData.unit}</strong>
-                `;
-                list.appendChild(div);
-            });
+            renderList(scheme.warmup, 'warmup-list');
+            renderList(scheme.workout, 'workout-list');
         }
 
         function openExerciseInfo(exName) {
             const ex = exerciseLibrary[exName];
             if (!ex) return;
             document.getElementById('ex-modal-title').innerText = exName;
-            let imgEl = document.getElementById('ex-modal-img');
-            imgEl.src = ex.img;
-            imgEl.alt = exName;
+            document.getElementById('ex-modal-img').src = ex.img;
             document.getElementById('ex-modal-desc').innerText = ex.desc;
             document.getElementById('exercise-modal').style.display = 'flex';
         }
 
         function renderAllUI() {
             document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || '').toUpperCase();
-            
             document.getElementById('prof-name').innerText = appData.username || '-';
-            document.getElementById('prof-age').innerText = calculateAge(appData.dob) + (appData.dob ? " anni" : "");
-            document.getElementById('prof-height').innerText = appData.height ? appData.height + " cm" : '-';
-            document.getElementById('prof-weight').innerText = appData.netWeight ? parseFloat(appData.netWeight).toFixed(1) + " kg" : '-';
-            document.getElementById('prof-lifestyle').innerText = appData.lifestyle || '-';
-            
+            document.getElementById('prof-age').innerText = calculateAge(appData.dob) + " anni";
+            document.getElementById('prof-height').innerText = (appData.height || '-') + " cm";
+            document.getElementById('prof-weight').innerText = (appData.netWeight || '-') + " kg";
             document.getElementById('prof-mood').innerText = appData.mood || '-';
             document.getElementById('prof-sleep').innerText = appData.sleep || '-';
             document.getElementById('prof-energy').innerText = appData.energy || '-';
-
-            if (appData.height && appData.netWeight) {
-                let hM = appData.height / 100;
-                let bmi = (appData.netWeight / (hM * hM)).toFixed(1);
-                let cat = bmi < 18.5 ? "Sottopeso" : (bmi < 25 ? "Normopeso" : (bmi < 30 ? "Sovrappeso" : "Obesità"));
-                document.getElementById('prof-bmi').innerText = `${bmi} (${cat})`;
-            } else {
-                document.getElementById('prof-bmi').innerText = '-';
-            }
-
             document.getElementById('total-workouts').innerText = appData.totalWorkouts || 0;
             document.getElementById('total-meditations').innerText = appData.totalMeditations || 0;
             document.getElementById('last-feedback').innerText = appData.lastFeedback || 'Nessuno';
 
-            if (appData.currentWorkoutScheme) {
-                renderWorkoutScheme(appData.currentWorkoutScheme);
-            } else if (currentUsername) {
-                generateWorkoutWithAI();
-            }
+            if (appData.currentWorkoutScheme) renderWorkoutScheme(appData.currentWorkoutScheme);
+            else if (currentUsername) generateWorkoutWithAI();
         }
 
         function calculateAge(dobString) {
             if (!dobString) return '-';
-            const dob = new Date(dobString);
-            const diff = Date.now() - dob.getTime();
+            const diff = Date.now() - new Date(dobString).getTime();
             return Math.abs(new Date(diff).getUTCFullYear() - 1970);
         }
 
-        function calculateNetWeight() {
-            let gross = parseFloat(document.getElementById('input-gross-weight').value) || 0;
-            let deduction = 0;
-            document.querySelectorAll('.cloth-check:checked').forEach(cb => deduction += parseFloat(cb.value));
-            let net = Math.max(0, gross - deduction);
-            document.getElementById('net-weight-display').innerText = net.toFixed(1) + " Kg";
-            return net.toFixed(1);
-        }
-
         function saveProfile() {
-            let user = document.getElementById('input-username').value.trim().toLowerCase();
-            if (!user) return alert("Il Nome Utente ID è obbligatorio!");
-
-            currentUsername = user;
-            localStorage.setItem('fm_user', currentUsername);
-            userRef = db.ref('user_profile/' + currentUsername);
-
-            appData.username = user;
+            appData.username = document.getElementById('input-username').value.trim().toLowerCase() || currentUsername;
             appData.dob = document.getElementById('input-dob').value;
             appData.height = document.getElementById('input-height').value;
-            appData.grossWeight = document.getElementById('input-gross-weight').value;
-            appData.netWeight = calculateNetWeight();
-            appData.lifestyle = document.getElementById('input-lifestyle').value;
             appData.mood = document.getElementById('input-mood').value;
             appData.sleep = document.getElementById('input-sleep').value;
             appData.energy = document.getElementById('input-energy').value;
-
             saveToCloud();
             closeModal('profile-modal');
-            showDashboardUI();
-            generateWorkoutWithAI(); // Rigenera la scheda adattandosi ai nuovi parametri mentali/fisici
-        }
-
-        function openProfileModal() {
-            document.getElementById('modal-profile-title').innerText = "Modifica Profilo";
-            document.getElementById('input-username').value = appData.username || currentUsername || '';
-            document.getElementById('input-dob').value = appData.dob || '';
-            document.getElementById('input-height').value = appData.height || '';
-            document.getElementById('input-gross-weight').value = appData.grossWeight || '';
-            document.getElementById('input-lifestyle').value = appData.lifestyle || 'Moderatamente Attivo';
-            document.getElementById('input-mood').value = appData.mood || 'Sereno / Equilibrato';
-            document.getElementById('input-sleep').value = appData.sleep || '3/5 - Discreto';
-            document.getElementById('input-energy').value = appData.energy || 'Medio (Batteria 50%)';
-            calculateNetWeight();
-            document.getElementById('profile-modal').style.display = 'flex';
+            generateWorkoutWithAI();
         }
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('nav button').forEach(el => el.className = '');
-
             document.getElementById('tab-' + tabName).classList.add('active');
-            let btn = document.getElementById('nav-' + tabName);
-            btn.classList.add(tabName === 'meditation' ? 'active-meditation' : 'active');
+            document.getElementById('nav-' + tabName).classList.add(tabName === 'meditation' ? 'active-meditation' : 'active');
         }
 
-        function completeWorkout() {
-            document.getElementById('feedback-card').style.display = 'block';
-        }
-
-        function saveFeedbackAndAdjust(feedback) {
-            appData.lastFeedback = feedback;
+        function completeWorkout() { document.getElementById('feedback-card').style.display = 'block'; }
+        function saveFeedbackAndAdjust(fb) {
+            appData.lastFeedback = fb;
             appData.totalWorkouts = (appData.totalWorkouts || 0) + 1;
             saveToCloud();
-
             document.getElementById('feedback-card').style.display = 'none';
-            alert(`Sessione registrata! Feedback: "${feedback}". L'IA ne terrà conto la prossima volta.`);
+            alert("Ottimo lavoro! Sessione registrata.");
         }
 
-        // --- GESTIONE MEDITAZIONE ---
+        // --- GESTIONE MEDITAZIONE CORRETTA ---
         let meditationTimerId = null;
         let meditationSeconds = 300;
         let isMeditating = false;
 
-        function toggleMeditation() {
-            isMeditating ? pauseMeditation() : startMeditation();
+        function updateMeditationConfig() {
+            const type = document.getElementById('meditation-type').value;
+            if (type === 'focus') meditationSeconds = 180;
+            else if (type === 'relax') meditationSeconds = 300;
+            else if (type === 'sleep') meditationSeconds = 480;
+            resetMeditation();
         }
+
+        function toggleMeditation() { isMeditating ? pauseMeditation() : startMeditation(); }
 
         function startMeditation() {
             isMeditating = true;
             document.getElementById('btn-start-meditation').innerText = "Pausa";
             
+            const audio = document.getElementById('meditation-audio');
             if (document.getElementById('music-toggle').checked) {
-                document.getElementById('meditation-audio').play().catch(() => {});
+                audio.play().catch(e => console.log("Interazione audio sbloccata:", e));
             }
 
             meditationTimerId = setInterval(() => {
@@ -865,10 +538,9 @@ Rispondi RIGOROSAMENTE ed ESCLUSIVAMENTE in formato JSON valido, senza markdown,
                 if (meditationSeconds <= 0) {
                     clearInterval(meditationTimerId);
                     isMeditating = false;
-                    stopAudio();
+                    audio.pause();
                     document.getElementById('btn-start-meditation').innerText = "Avvia";
-                    document.getElementById('meditation-instruction').innerText = "Sessione Completata! 🎉";
-                    
+                    document.getElementById('meditation-instruction').innerText = "Sessione Completata! 🧘";
                     appData.totalMeditations = (appData.totalMeditations || 0) + 1;
                     saveToCloud();
                 }
@@ -878,36 +550,30 @@ Rispondi RIGOROSAMENTE ed ESCLUSIVAMENTE in formato JSON valido, senza markdown,
         function pauseMeditation() {
             isMeditating = false;
             clearInterval(meditationTimerId);
-            stopAudio();
+            document.getElementById('meditation-audio').pause();
             document.getElementById('btn-start-meditation').innerText = "Riprendi";
         }
 
         function resetMeditation() {
             pauseMeditation();
-            meditationSeconds = 300;
+            let type = document.getElementById('meditation-type').value;
+            meditationSeconds = type === 'focus' ? 180 : (type === 'sleep' ? 480 : 300);
             updateMeditationDisplay();
             document.getElementById('btn-start-meditation').innerText = "Avvia";
-            document.getElementById('meditation-instruction').innerText = "Premi avvia per iniziare.";
-        }
-
-        function stopAudio() {
-            const audio = document.getElementById('meditation-audio');
-            audio.pause();
-            audio.currentTime = 0;
+            document.getElementById('meditation-instruction').innerText = "Seleziona l'obiettivo e premi avvia.";
         }
 
         function updateMeditationDisplay() {
             let m = Math.floor(meditationSeconds / 60);
             let s = meditationSeconds % 60;
-            document.getElementById('meditation-timer').innerText = 
-                `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+            document.getElementById('meditation-timer').innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 
-            if (document.getElementById('meditation-mode').value === 'guided' && isMeditating) {
-                if (meditationSeconds > 240) document.getElementById('meditation-instruction').innerText = "Inhala lentamente ed espandi l'addome...";
-                else if (meditationSeconds > 180) document.getElementById('meditation-instruction').innerText = "Trattieni il respiro per qualche secondo...";
-                else if (meditationSeconds > 120) document.getElementById('meditation-instruction').innerText = "Espirando, rilascia ogni tensione dalle spalle...";
-                else if (meditationSeconds > 60) document.getElementById('meditation-instruction').innerText = "Rimani nel momento presente, ascolta il tuo corpo...";
-                else document.getElementById('meditation-instruction').innerText = "Unisciti all'ultimo minuto di profondo rilassamento...";
+            if (isMeditating) {
+                if (meditationSeconds % 12 === 0) {
+                    document.getElementById('meditation-instruction').innerText = "Inhala lentamente ed espandi l'addome...";
+                } else if (meditationSeconds % 6 === 0) {
+                    document.getElementById('meditation-instruction').innerText = "Espirando, rilascia ogni tensione dalle spalle...";
+                }
             }
         }
 
