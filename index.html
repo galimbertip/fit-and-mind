@@ -3,12 +3,12 @@
 <head>
     <!-- 
       Fit & Mind - Web App
-      Versione: v1.4.0 (PG Edition)
-      Novità: Guida illustrata per ogni esercizio (Tasto ℹ️), Musica di sottofondo per Meditazione, Cloud Function Gemini integrata.
+      Versione: v1.4.1 (PG Edition)
+      Novità: GIF animate tecniche per ogni esercizio (Tasto ℹ️), Musica Meditazione, Cloud Function Gemini integrata.
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind (PG Edition v1.4.0)</title>
+    <title>Fit & Mind (PG Edition v1.4.1)</title>
     <meta name="theme-color" content="#121212">
     
     <!-- Icone per PWA / Scorciatoia Schermata Home -->
@@ -235,7 +235,7 @@
     </nav>
 
     <main>
-        <!-- SCHERMATA NEUTRA DI BENVENUTO -->
+        <!-- SCHERMATA DI BENVENUTO -->
         <div id="welcome-screen" class="card">
             <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Fit & Mind Logo">
             <h2 style="font-size: 1.4rem; margin-bottom: 5px;">Benvenuto in Fit & Mind</h2>
@@ -350,11 +350,11 @@
         </div>
     </main>
 
-    <!-- MODALE GUIDA ESERCIZIO (IMMAGINI) -->
+    <!-- MODALE GUIDA ESERCIZIO (GIF ANIMATE) -->
     <div id="exercise-modal" class="modal-overlay" style="display:none;">
         <div class="card" style="max-width: 420px; width: 90%; text-align: center;">
             <h2 id="ex-modal-title">Guida Esercizio</h2>
-            <img id="ex-modal-img" src="" alt="Guida esercizio" style="width: 100%; max-height: 250px; object-fit: contain; border-radius: 8px; margin: 10px 0; background: #2a2a2a;">
+            <img id="ex-modal-img" src="" alt="Guida esercizio" style="width: 100%; max-height: 280px; object-fit: contain; border-radius: 8px; margin: 10px 0; background: #2a2a2a;">
             <p id="ex-modal-desc" style="font-size: 0.85rem; color: #ccc; text-align: left;"></p>
             <button class="btn btn-secondary" onclick="closeModal('exercise-modal')">Chiudi</button>
         </div>
@@ -472,11 +472,11 @@
     <audio id="meditation-audio" loop src="https://assets.mixkit.co/music/preview/mixkit-deep-meditation-109.mp3"></audio>
 
     <footer>
-        v1.4.0 - PG Edition | Developed for Personal Training & Mind
+        v1.4.1 - PG Edition | Developed for Personal Training & Mind
     </footer>
 
     <script>
-        // CONFIGURAZIONE FIREBASE
+        // CONFIGURAZIONE FIREBASE REALTIME DATABASE
         const firebaseConfig = {
             apiKey: "AIzaSyDviQAQZ8FNfJsJz-Z-azgCR73l4CqThTs",
             authDomain: "fit-and-mind.firebaseapp.com",
@@ -488,7 +488,7 @@
             measurementId: "G-2898FX742E"
         };
 
-        // ENDPOINT CLOUD RUN (GEMINI)
+        // ENDPOINT CLOUD RUN (GEMINI API)
         const GEMINI_ENDPOINT = "https://generate-image-prompt-591471755393.europe-west1.run.app";
 
         firebase.initializeApp(firebaseConfig);
@@ -512,41 +512,42 @@
             totalMeditations: 0
         };
 
+        // ARRAY ESERCIZI CON GIF DIDATTICHE ANIMATE CORRETTE
         const baseExercises = [
             { 
                 name: "Piegamenti facilitati (ginocchia)", 
                 baseRep: 10, 
                 unit: "rep",
-                img: "https://cdn-icons-png.flaticon.com/512/2548/2548537.png",
-                desc: "Poggia le ginocchia a terra, mantieni il core ingaggiato e abbassa il petto verso il pavimento piegando i gomiti a 45 gradi."
+                img: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Kneeling-Push-up.gif",
+                desc: "Poggia le ginocchia a terra, mantieni il core ingaggiato e abbassa il petto verso il pavimento piegando i gomiti a circa 45 gradi."
             },
             { 
                 name: "Squat a corpo libero", 
                 baseRep: 12, 
                 unit: "rep",
-                img: "https://cdn-icons-png.flaticon.com/512/2548/2548525.png",
-                desc: "Piedi larghezza spalle, scendi spingendo il bacino all'indietro come per sederti, mantenendo il petto alto e la schiena dritta."
+                img: "https://fitnessprogramer.com/wp-content/uploads/2021/02/SQUAT.gif",
+                desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro come per sederti. Mantieni il petto alto e la schiena dritta."
             },
             { 
                 name: "Plank isometrico", 
                 baseRep: 25, 
                 unit: "sec",
-                img: "https://cdn-icons-png.flaticon.com/512/2548/2548530.png",
-                desc: "Poggia sugli avambracci e sulle punte dei piedi. Mantieni una linea retta dalla testa ai talloni senza far cedere il bacino."
+                img: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Plank.gif",
+                desc: "Poggia sugli avambracci e sulle punte dei piedi. Mantieni il corpo in linea retta senza far cedere il bacino o sollevare i glutei."
             },
             { 
                 name: "Crunch Addominali", 
                 baseRep: 15, 
                 unit: "rep",
-                img: "https://cdn-icons-png.flaticon.com/512/2548/2548521.png",
-                desc: "Sdraiato sulla schiena, piega le ginocchia e solleva leggermente le spalle verso il bacino contraendo gli addominali."
+                img: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Crunch.gif",
+                desc: "Sdraiato sulla schiena, piega le ginocchia e solleva le spalle verso il bacino contraendo l'addome. Evita di tirare il collo con le mani."
             },
             { 
                 name: "Affondi posteriori alternati", 
                 baseRep: 10, 
                 unit: "rep/gamba",
-                img: "https://cdn-icons-png.flaticon.com/512/2548/2548534.png",
-                desc: "Fai un passo indietro piegando entrambe le ginocchia a 90 gradi, poi spingi sul piede anteriore per tornare in piedi."
+                img: "https://fitnessprogramer.com/wp-content/uploads/2021/02/Reverse-Lunge.gif",
+                desc: "Fai un passo indietro piegando entrambe le ginocchia fino a circa 90 gradi. Spingi sul piede anteriore per tornare alla posizione di partenza."
             }
         ];
 
@@ -637,7 +638,9 @@
         function openExerciseInfo(index) {
             let ex = baseExercises[index];
             document.getElementById('ex-modal-title').innerText = ex.name;
-            document.getElementById('ex-modal-img').src = ex.img;
+            let imgEl = document.getElementById('ex-modal-img');
+            imgEl.src = ex.img;
+            imgEl.alt = ex.name;
             document.getElementById('ex-modal-desc').innerText = ex.desc;
             document.getElementById('exercise-modal').style.display = 'flex';
         }
@@ -680,7 +683,7 @@
             document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || '').toUpperCase();
             document.getElementById('current-level-display').innerText = "Intensità x" + (appData.levelMultiplier || 1.0).toFixed(1);
 
-            // Render esercizi con pulsante Guida ℹ️
+            // Render esercizi
             const list = document.getElementById('workout-list');
             list.innerHTML = '';
             let mult = appData.levelMultiplier || 1.0;
@@ -908,7 +911,7 @@
             if (document.getElementById('meditation-mode').value === 'guided' && isMeditating) {
                 if (meditationSeconds > 240) document.getElementById('meditation-instruction').innerText = "Inhala lentamente ed espandi l'addome...";
                 else if (meditationSeconds > 180) document.getElementById('meditation-instruction').innerText = "Trattieni il respiro per qualche secondo...";
-                else if (meditationSeconds > 120) document.getElementById('meditation-instruction').innerText = "Escirando, rilascia ogni tensione dalle spalle...";
+                else if (meditationSeconds > 120) document.getElementById('meditation-instruction').innerText = "Espirando, rilascia ogni tensione dalle spalle...";
                 else if (meditationSeconds > 60) document.getElementById('meditation-instruction').innerText = "Rimani nel momento presente, ascolta il tuo corpo...";
                 else document.getElementById('meditation-instruction').innerText = "Unisciti all'ultimo minuto di profondo rilassamento...";
             }
