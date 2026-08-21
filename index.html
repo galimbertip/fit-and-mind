@@ -3,12 +3,12 @@
 <head>
     <!-- 
       Fit & Mind - Web App
-      Versione: v1.2.0 (PG Edition)
-      Novità: Auto-logout per inattività, Tracciamento Stato Mentale & Umore, Favicon PWA integrata.
+      Versione: v1.3.0 (PG Edition)
+      Novità: Schermata iniziale neutra con Logo, opzioni Accedi / Registrati, Tasto Logout sempre in Header.
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind (PG Edition v1.2.0)</title>
+    <title>Fit & Mind (PG Edition v1.3.0)</title>
     <meta name="theme-color" content="#121212">
     
     <!-- Icone per PWA / Scorciatoia Schermata Home -->
@@ -46,13 +46,29 @@
             text-align: center;
             border-bottom: 1px solid #333;
             position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        h1 { margin: 0; font-size: 1.4rem; color: var(--accent); letter-spacing: 1px; }
-        .subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-top: 3px; }
+        .header-title-box { text-align: left; }
+        h1 { margin: 0; font-size: 1.3rem; color: var(--accent); letter-spacing: 1px; }
+        .subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+
+        .btn-logout-header {
+            background-color: #333;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
 
         nav {
-            display: flex;
+            display: none;
             width: 100%;
             max-width: 600px;
             background-color: #1a1a1a;
@@ -134,7 +150,7 @@
             border-radius: 4px;
             font-size: 0.7rem;
             font-weight: bold;
-            margin-top: 5px;
+            margin-top: 4px;
         }
         .sync-online { background-color: #2e7d32; color: #fff; }
         .sync-offline { background-color: #c62828; color: #fff; }
@@ -165,6 +181,17 @@
         }
         .clothes-grid label { display: flex; align-items: center; gap: 5px; color: #bbb; cursor: pointer; }
 
+        /* Schermata di Benvenuto */
+        #welcome-screen {
+            text-align: center;
+            padding: 30px 10px;
+        }
+        #welcome-screen img {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 15px;
+        }
+
         footer {
             font-size: 0.75rem; color: #666; text-align: center; padding: 15px; margin-top: auto;
         }
@@ -176,20 +203,41 @@
 <body>
 
     <header>
-        <h1>FIT & MIND <span style="font-size: 0.7rem; color: #888;">PG Edition</span></h1>
-        <div class="subtitle" id="user-header-name">In attesa di Login...</div>
-        <div id="sync-badge" class="sync-status-badge sync-offline">Connessione...</div>
+        <div class="header-title-box">
+            <h1>FIT & MIND <span style="font-size: 0.7rem; color: #888;">PG Edition</span></h1>
+            <div class="subtitle" id="user-header-name">In attesa di Login</div>
+        </div>
+        <div>
+            <button id="btn-header-logout" class="btn-logout-header" onclick="logout()">Esci ✕</button>
+            <div id="sync-badge" class="sync-status-badge sync-offline">Offline</div>
+        </div>
     </header>
 
-    <nav>
+    <nav id="app-nav">
         <button id="nav-workout" class="active" onclick="switchTab('workout')">Allenamento</button>
         <button id="nav-meditation" onclick="switchTab('meditation')">Meditazione</button>
         <button id="nav-stats" onclick="switchTab('stats')">Profilo & Mind</button>
     </nav>
 
     <main>
+        <!-- SCHERMATA NEUTRA DI BENVENUTO -->
+        <div id="welcome-screen" class="card">
+            <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Fit & Mind Logo">
+            <h2 style="font-size: 1.4rem; margin-bottom: 5px;">Benvenuto in Fit & Mind</h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px;">
+                Personal Training & Mind Care Sync
+            </p>
+
+            <button class="btn" style="margin-bottom: 12px;" onclick="openLoginModal()">
+                Accedi al tuo Profilo
+            </button>
+            <button class="btn btn-meditation" onclick="openRegisterModal()">
+                Crea Nuovo Profilo
+            </button>
+        </div>
+
         <!-- TAB ALLENAMENTO -->
-        <div id="tab-workout" class="tab-content active">
+        <div id="tab-workout" class="tab-content">
             <div id="bday-banner" class="card" style="display:none; background: linear-gradient(135deg, #ff6b6b, #4ecdc4); color: black;">
                 <h2 style="color: black; margin: 0;">🎉 BUON COMPLEANNO! 🎂</h2>
                 <p style="font-size:0.85rem; margin: 5px 0 0 0;">Oggi per te una sessione speciale di festeggiamento e rigenerazione!</p>
@@ -262,7 +310,6 @@
                 <div class="exercise-item"><span>Qualità del Sonno:</span><strong id="prof-sleep">-</strong></div>
                 <div class="exercise-item"><span>Livello Energia:</span><strong id="prof-energy">-</strong></div>
                 <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Dati Fisici & Mentali</button>
-                <button class="btn btn-secondary" style="margin-top: 8px; background: #555;" onclick="logout()">Logout immediato</button>
             </div>
 
             <div class="card">
@@ -274,10 +321,23 @@
         </div>
     </main>
 
+    <!-- MODALE ACCESSO -->
+    <div id="login-modal" class="modal-overlay" style="display:none;">
+        <div class="card" style="max-width: 380px; width: 90%;">
+            <h2>Accedi al tuo Profilo</h2>
+            <div class="form-group">
+                <label>Inserisci il tuo Nome Utente ID:</label>
+                <input type="text" id="login-username-input" placeholder="es. paolo">
+            </div>
+            <button class="btn" onclick="executeLogin()">Accedi</button>
+            <button class="btn btn-secondary" style="margin-top: 8px;" onclick="closeModal('login-modal')">Annulla</button>
+        </div>
+    </div>
+
     <!-- MODALE REGISTRAZIONE / EDIT PROFILO -->
     <div id="profile-modal" class="modal-overlay" style="display:none;">
         <div class="card" style="max-width: 480px; width: 90%; max-height: 90vh; overflow-y: auto;">
-            <h2>Profilo Completo (Fisico & Mind)</h2>
+            <h2 id="modal-profile-title">Crea Nuovo Profilo</h2>
             
             <div class="form-group">
                 <label>Nome Utente ID:</label>
@@ -365,11 +425,12 @@
             </div>
 
             <button class="btn" onclick="saveProfile()">Salva Profilo</button>
+            <button class="btn btn-secondary" style="margin-top: 8px;" onclick="closeModal('profile-modal')">Chiudi</button>
         </div>
     </div>
 
     <footer>
-        v1.2.0 - PG Edition | Developed for Personal Training & Mind
+        v1.3.0 - PG Edition | Developed for Personal Training & Mind
     </footer>
 
     <script>
@@ -393,9 +454,9 @@
         let appData = {
             username: '',
             dob: '',
-            height: 175,
-            grossWeight: 75,
-            netWeight: 75,
+            height: '',
+            grossWeight: '',
+            netWeight: '',
             lifestyle: 'Moderatamente Attivo',
             mood: 'Sereno / Equilibrato',
             sleep: '3/5 - Discreto',
@@ -415,13 +476,13 @@
 
         // --- SISTEMA AUTO LOGOUT PER INATTIVITÀ (15 minuti) ---
         let inactivityTimer;
-        const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 Minuti in millisecondi
+        const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
 
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
             if (currentUsername) {
                 inactivityTimer = setTimeout(() => {
-                    alert("Sessione scaduta per inattività. Effettua nuovamente l'accesso per tutelare la tua privacy.");
+                    alert("Sessione scaduta per inattività.");
                     logout();
                 }, INACTIVITY_TIMEOUT);
             }
@@ -437,15 +498,68 @@
             location.reload();
         }
 
-        // Init App & Sync
+        // Init App
         function initApp() {
-            if (!currentUsername) {
-                openProfileModal();
-            } else {
+            if (currentUsername) {
+                showDashboardUI();
                 userRef = db.ref('user_profile/' + currentUsername);
                 initFirebaseSync();
+            } else {
+                showWelcomeUI();
             }
             resetInactivityTimer();
+        }
+
+        function showWelcomeUI() {
+            document.getElementById('welcome-screen').style.display = 'block';
+            document.getElementById('app-nav').style.display = 'none';
+            document.getElementById('btn-header-logout').style.display = 'none';
+            document.getElementById('user-header-name').innerText = "In attesa di Login";
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        }
+
+        function showDashboardUI() {
+            document.getElementById('welcome-screen').style.display = 'none';
+            document.getElementById('app-nav').style.display = 'flex';
+            document.getElementById('btn-header-logout').style.display = 'inline-block';
+            switchTab('workout');
+        }
+
+        function openLoginModal() {
+            document.getElementById('login-username-input').value = '';
+            document.getElementById('login-modal').style.display = 'flex';
+        }
+
+        function executeLogin() {
+            let input = document.getElementById('login-username-input').value.trim().toLowerCase();
+            if (!input) {
+                alert("Inserisci un Nome Utente valido!");
+                return;
+            }
+            currentUsername = input;
+            localStorage.setItem('fm_user', currentUsername);
+            closeModal('login-modal');
+            showDashboardUI();
+            userRef = db.ref('user_profile/' + currentUsername);
+            initFirebaseSync();
+        }
+
+        function openRegisterModal() {
+            document.getElementById('modal-profile-title').innerText = "Crea Nuovo Profilo";
+            document.getElementById('input-username').value = '';
+            document.getElementById('input-dob').value = '';
+            document.getElementById('input-height').value = '';
+            document.getElementById('input-gross-weight').value = '';
+            document.getElementById('input-lifestyle').value = 'Moderatamente Attivo';
+            document.getElementById('input-mood').value = 'Sereno / Equilibrato';
+            document.getElementById('input-sleep').value = '3/5 - Discreto';
+            document.getElementById('input-energy').value = 'Medio (Batteria 50%)';
+            calculateNetWeight();
+            document.getElementById('profile-modal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         function initFirebaseSync() {
@@ -454,7 +568,7 @@
                 const data = snapshot.val();
                 if (data) {
                     appData = { ...appData, ...data };
-                    updateBadge("Sincronizzato Cloud", true);
+                    updateBadge("Sincronizzato", true);
                 } else {
                     saveToCloud();
                 }
@@ -467,8 +581,8 @@
         function saveToCloud() {
             if (userRef) {
                 userRef.set(appData)
-                    .then(() => updateBadge("Sincronizzato Cloud", true))
-                    .catch(() => updateBadge("Errore Salvataggio", false));
+                    .then(() => updateBadge("Sincronizzato", true))
+                    .catch(() => updateBadge("Errore Cloud", false));
             }
         }
 
@@ -479,7 +593,7 @@
         }
 
         function renderAllUI() {
-            document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || 'Ospite').toUpperCase();
+            document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || '').toUpperCase();
             document.getElementById('current-level-display').innerText = "Intensità x" + (appData.levelMultiplier || 1.0).toFixed(1);
 
             // Render esercizi
@@ -494,11 +608,11 @@
                 list.appendChild(div);
             });
 
-            // Render sezione Profilo Fisico & Mentale
+            // Render Profilo Fisico & Mentale
             document.getElementById('prof-name').innerText = appData.username || '-';
-            document.getElementById('prof-age').innerText = calculateAge(appData.dob) + " anni";
-            document.getElementById('prof-height').innerText = (appData.height || 0) + " cm";
-            document.getElementById('prof-weight').innerText = (appData.netWeight || 0).toFixed(1) + " kg";
+            document.getElementById('prof-age').innerText = calculateAge(appData.dob) + (appData.dob ? " anni" : "");
+            document.getElementById('prof-height').innerText = appData.height ? appData.height + " cm" : '-';
+            document.getElementById('prof-weight').innerText = appData.netWeight ? parseFloat(appData.netWeight).toFixed(1) + " kg" : '-';
             document.getElementById('prof-lifestyle').innerText = appData.lifestyle || '-';
             
             document.getElementById('prof-mood').innerText = appData.mood || '-';
@@ -514,6 +628,8 @@
                 else if (bmi >= 25 && bmi < 30) cat = "Sovrappeso";
                 else if (bmi >= 30) cat = "Obesità";
                 document.getElementById('prof-bmi').innerText = `${bmi} (${cat})`;
+            } else {
+                document.getElementById('prof-bmi').innerText = '-';
             }
 
             document.getElementById('total-workouts').innerText = appData.totalWorkouts || 0;
@@ -554,7 +670,8 @@
         }
 
         function openProfileModal() {
-            document.getElementById('input-username').value = appData.username || currentUsername || 'paolo';
+            document.getElementById('modal-profile-title').innerText = "Aggiorna Profilo";
+            document.getElementById('input-username').value = appData.username || currentUsername || '';
             document.getElementById('input-dob').value = appData.dob || '';
             document.getElementById('input-height').value = appData.height || '';
             document.getElementById('input-gross-weight').value = appData.grossWeight || '';
@@ -567,12 +684,17 @@
         }
 
         function saveProfile() {
-            let newUsername = document.getElementById('input-username').value.trim().toLowerCase() || 'paolo';
+            let newUsername = document.getElementById('input-username').value.trim().toLowerCase();
+            if (!newUsername) {
+                alert("Inserisci un Nome Utente!");
+                return;
+            }
+
             let { gross, net } = calculateNetWeight();
 
             appData.username = newUsername;
             appData.dob = document.getElementById('input-dob').value;
-            appData.height = parseFloat(document.getElementById('input-height').value) || 0;
+            appData.height = parseFloat(document.getElementById('input-height').value) || '';
             appData.grossWeight = gross;
             appData.netWeight = net;
             appData.lifestyle = document.getElementById('input-lifestyle').value;
@@ -589,7 +711,8 @@
                 saveToCloud();
             }
 
-            document.getElementById('profile-modal').style.display = 'none';
+            closeModal('profile-modal');
+            showDashboardUI();
             renderAllUI();
         }
 
