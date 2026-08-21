@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v3.0 - Adaptive & Infinite AI Workout Engine -->
+    <!-- Fit & Mind v3.0.1 - Adaptive & Infinite AI Workout Engine -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind</title>
+    <title>Fit & Mind v3.0.1</title>
     <meta name="theme-color" content="#121212">
     
     <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
@@ -37,9 +37,17 @@
         h1 { margin: 0; font-size: 1.3rem; color: var(--accent); letter-spacing: 1px; }
         .subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
 
+        .header-actions { display: flex; gap: 8px; align-items: center; }
+
+        .btn-header {
+            background-color: #333; color: var(--text-primary); border: 1px solid #555;
+            padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer;
+        }
+        .btn-header:hover { background-color: #444; }
+
         .btn-logout-header {
             background-color: #333; color: #ff6b6b; border: 1px solid #ff6b6b;
-            padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: none;
+            padding: 5px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: none;
         }
 
         nav { display: none; width: 100%; max-width: 600px; background-color: #1a1a1a; }
@@ -99,7 +107,45 @@
             border-radius: 4px; font-size: 0.85rem; color: #d1f2f0; margin-bottom: 15px; font-style: italic;
         }
 
+        /* --- STILI CHANGELOG --- */
+        .changelog-version {
+            border-bottom: 1px solid #333;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .changelog-version:last-child { border-bottom: none; margin-bottom: 0; }
+        .version-tag {
+            display: inline-block;
+            background-color: var(--accent);
+            color: #fff;
+            font-weight: bold;
+            font-size: 0.75rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+        .badge-type {
+            font-size: 0.65rem;
+            font-weight: bold;
+            padding: 2px 5px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            margin-right: 5px;
+        }
+        .badge-major { background-color: #d32f2f; color: #fff; }
+        .badge-minor { background-color: #0288d1; color: #fff; }
+        .badge-patch { background-color: #388e3c; color: #fff; }
+
+        .changelog-list {
+            margin: 5px 0 0 0;
+            padding-left: 18px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .changelog-list li { margin-bottom: 4px; }
+
         footer { font-size: 0.75rem; color: #666; text-align: center; padding: 15px; margin-top: auto; }
+        footer span { cursor: pointer; text-decoration: underline; color: var(--accent-meditation); }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -109,10 +155,11 @@
 
     <header>
         <div>
-            <h1>FIT & MIND</h1>
+            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v3.0.1</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
-        <div>
+        <div class="header-actions">
+            <button class="btn-header" onclick="openChangelogModal()">📜 Changelog</button>
             <button id="btn-header-logout" class="btn-logout-header" onclick="logout()">Esci ✕</button>
             <div id="sync-badge" class="sync-status-badge sync-offline">Offline</div>
         </div>
@@ -128,7 +175,7 @@
         <!-- BENVENUTO -->
         <div id="welcome-screen" class="card" style="text-align: center; padding: 30px 10px;">
             <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
-            <h2 style="margin-bottom: 5px;">Benvenuto in Fit & Mind</h2>
+            <h2 style="margin-bottom: 5px;">Benvenuto in Fit & Mind v3.0.1</h2>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px;">Adaptive Personal Training & Mind Care</p>
             <button class="btn" style="margin-bottom: 12px;" onclick="openLoginModal()">Accedi al tuo Profilo</button>
             <button class="btn btn-meditation" onclick="openRegisterModal()">Crea Nuovo Profilo</button>
@@ -272,10 +319,64 @@
         </div>
     </div>
 
+    <!-- MODALE CHANGELOG -->
+    <div id="changelog-modal" class="modal-overlay" style="display:none;">
+        <div class="card" style="max-width: 520px; width: 90%; max-height: 85vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0;">📜 Storico Versioni (Changelog)</h2>
+                <button onclick="closeModal('changelog-modal')" style="background:none; border:none; color:#aaa; font-size:1.2rem; cursor:pointer;">✕</button>
+            </div>
+
+            <!-- v3.0.1 -->
+            <div class="changelog-version">
+                <span class="version-tag">v3.0.1</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-patch">PATCH</span> Interfaccia: Integrata la modale interattiva per il Changelog con categorizzazione semantica (Major, Minor, Patch).</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Refactoring: Consolidato il codice sorgente single-file e sincronizzate le etichette di versione nell'intera UI.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Network: Ottimizzata la gestione del fallback in assenza di connessione o in stato offline Firebase.</li>
+                </ul>
+            </div>
+
+            <!-- v3.0.0 -->
+            <div class="changelog-version">
+                <span class="version-tag">v3.0.0</span>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-major">MAJOR</span> Re-engineering Engine: Transizione dall'algoritmo statico al motore AI Adattivo (Generative AI Engine via Google Gemini Cloud Run).</li>
+                    <li><span class="badge-type badge-major">MAJOR</span> Sincronizzazione Cloud: Abilitata la sincronizzazione in tempo reale su Firebase Realtime Database.</li>
+                    <li><span class="badge-type badge-minor">MINOR</span> Modulo Mind Care: Aggiunta la sezione di meditazione guidata con timer flessibile e suoni d'ambiente.</li>
+                    <li><span class="badge-type badge-minor">MINOR</span> Dynamic Profiling: Introduzione del tracciamento dello stato psicofisico quotidiano (Energia, Sonno, Umore) e ciclo di feedback adattivo post-workout.</li>
+                </ul>
+            </div>
+
+            <!-- v2.0.0 -->
+            <div class="changelog-version">
+                <span class="version-tag">v2.0.0</span>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-major">MAJOR</span> PWA & Standalone Support: Convertita l'applicazione in Web App installabile con file manifest e Service Worker integrato.</li>
+                    <li><span class="badge-type badge-minor">MINOR</span> UI Redesign: Nuovo layout Dark Theme ad alto contrasto per utilizzo mobile in palestra.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Storage: Migrazione dei dati locali da variabili volatili a LocalStorage persistente per dispositivo.</li>
+                </ul>
+            </div>
+
+            <!-- v1.0.0 -->
+            <div class="changelog-version">
+                <span class="version-tag">v1.0.0</span>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-major">MAJOR</span> Release Iniziale: Scheda di allenamento base a corpo libero con timer integrato e gestione profili utente locale.</li>
+                </ul>
+            </div>
+
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="closeModal('changelog-modal')">Chiudi</button>
+        </div>
+    </div>
+
     <!-- AUDIO MEDITAZIONE -->
     <audio id="meditation-audio" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=meditation-relaxing-112191.mp3"></audio>
 
-    <footer>v3.0 - Infinite Adaptive AI Engine</footer>
+    <footer>
+        Fit & Mind v3.0.1 - Infinite Adaptive AI Engine<br>
+        <span onclick="openChangelogModal()">Visualizza Changelog Completo</span>
+    </footer>
 
     <script>
         // Configurazione Firebase integrata
@@ -366,6 +467,10 @@
             document.getElementById('input-sleep').value = appData.sleep || '3/5 - Discreto';
             document.getElementById('input-energy').value = appData.energy || 'Media (50%)';
             document.getElementById('profile-modal').style.display = 'flex';
+        }
+
+        function openChangelogModal() {
+            document.getElementById('changelog-modal').style.display = 'flex';
         }
 
         function executeLogin() {
