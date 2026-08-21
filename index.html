@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v2.2 - Adaptive Workout & Mind Care -->
+    <!-- Fit & Mind v2.3 - Fixed Initialization & Local Fallback -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fit & Mind</title>
@@ -287,10 +287,10 @@
         </div>
     </div>
 
-    <!-- AUDIO MEDITAZIONE CON SORGENTE AFFIDABILE -->
+    <!-- AUDIO MEDITAZIONE -->
     <audio id="meditation-audio" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=meditation-relaxing-112191.mp3"></audio>
 
-    <footer>v2.2 - Adaptive Workout & Mind Care</footer>
+    <footer>v2.3 - Adaptive Workout & Mind Care</footer>
 
     <script>
         const firebaseConfig = {
@@ -305,7 +305,12 @@
 
         const GEMINI_ENDPOINT = "https://generate-image-prompt-591471755393.europe-west1.run.app";
 
-        firebase.initializeApp(firebaseConfig);
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) {
+            console.error("Firebase Initialization Error:", e);
+        }
+
         const db = firebase.database();
         let currentUsername = localStorage.getItem('fm_user');
         let userRef = null;
@@ -359,9 +364,24 @@
             }
         };
 
-        function logout() { localStorage.removeItem('fm_user'); location.reload(); }
+        function logout() { 
+            localStorage.removeItem('fm_user'); 
+            location.reload(); 
+        }
 
         function initApp() {
+            // Monitora stato connessione
+            db.ref('.info/connected').on('value', (snap) => {
+                const badge = document.getElementById('sync-badge');
+                if (snap.val() === true) {
+                    badge.innerText = "Online";
+                    badge.className = "sync-status-badge sync-online";
+                } else {
+                    badge.innerText = "Offline";
+                    badge.className = "sync-status-badge sync-offline";
+                }
+            });
+
             if (currentUsername) {
                 showDashboardUI();
                 userRef = db.ref('user_profile/' + currentUsername);
@@ -385,10 +405,28 @@
             switchTab('workout');
         }
 
-        function openLoginModal() { document.getElementById('login-modal').style.display = 'flex'; }
+        function openLoginModal() { 
+            document.getElementById('login-modal').style.display = 'flex'; 
+        }
+
+        function openRegisterModal() {
+            document.getElementById('input-username').value = '';
+            document.getElementById('profile-modal').style.display = 'flex';
+        }
+
+        function openProfileModal() {
+            document.getElementById('input-username').value = appData.username || currentUsername || '';
+            document.getElementById('input-dob').value = appData.dob || '';
+            document.getElementById('input-height').value = appData.height || '';
+            document.getElementById('input-mood').value = appData.mood || 'Sereno / Equilibrato';
+            document.getElementById('input-sleep').value = appData.sleep || '3/5 - Discreto';
+            document.getElementById('input-energy').value = appData.energy || 'Media (50%)';
+            document.getElementById('profile-modal').style.display = 'flex';
+        }
+
         function executeLogin() {
             let input = document.getElementById('login-username-input').value.trim().toLowerCase();
-            if (!input) return alert("Inserisci ID valido");
+            if (!input) return alert("Inserisci un ID valido");
             currentUsername = input;
             localStorage.setItem('fm_user', currentUsername);
             closeModal('login-modal');
@@ -397,12 +435,9 @@
             initFirebaseSync();
         }
 
-        function openRegisterModal() {
-            document.getElementById('input-username').value = '';
-            document.getElementById('profile-modal').style.display = 'flex';
+        function closeModal(id) { 
+            document.getElementById(id).style.display = 'none'; 
         }
-
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function initFirebaseSync() {
             if (!userRef) return;
@@ -413,7 +448,11 @@
             });
         }
 
-        function saveToCloud() { if (userRef) userRef.set(appData); }
+        function saveToCloud() { 
+            if (userRef) {
+                userRef.set(appData).catch(err => console.warn("Salvataggio Firebase in sospeso (offline):", err));
+            }
+        }
 
         async function generateWorkoutWithAI() {
             const rationaleEl = document.getElementById('ai-rationale');
@@ -445,4 +484,191 @@ Restituisci un JSON puro senza markdown:
                     body: JSON.stringify({ prompt: prompt })
                 });
                 const data = await res.json();
-                let rawText = (data.text || data.response || "").replace(/```json/g, "").replace(/
+                let rawText = (data.text || data.response || "").replace(/```json/g, "").replace(/```/g, "").trim();
+                const parsedScheme = JSON.parse(rawText);
+                appData.currentWorkoutScheme = parsedScheme;
+                saveToCloud();
+                renderWorkoutScheme(parsedScheme);
+            } catch (err) {
+                renderWorkoutScheme({
+                    rationale: "Scheda adattiva standard.",
+                    warmup: [{ name: "Circonduzioni Spalle", qty: 30 }, { name: "Cat-Cow (Mobilità Colonna)", qty: 45 }],
+                    workout: [{ name: "Squat a corpo libero", qty: 10 }, { name: "Plank isometrico", qty: 20 }]
+                });
+            }
+        }
+
+        function renderWorkoutScheme(scheme) {
+            if (!scheme) return;
+            document.getElementById('ai-rationale').innerText = `"${scheme.rationale}"`;
+            
+            const renderList = (items, targetId) => {
+                const container = document.getElementById(targetId);
+                container.innerHTML = '';
+                (items || []).forEach(ex => {
+                    const lib = exerciseLibrary[ex.name] || { unit: "rep" };
+                    let div = document.createElement('div');
+                    div.className = 'exercise-item';
+                    div.innerHTML = `<div><span>${ex.name}</span><button class="info-btn" onclick="openExerciseInfo('${ex.name}')">i</button></div><strong>${ex.qty} ${lib.unit}</strong>`;
+                    container.appendChild(div);
+                });
+            };
+
+            renderList(scheme.warmup, 'warmup-list');
+            renderList(scheme.workout, 'workout-list');
+        }
+
+        function openExerciseInfo(exName) {
+            const ex = exerciseLibrary[exName];
+            if (!ex) return;
+            document.getElementById('ex-modal-title').innerText = exName;
+            
+            let imgEl = document.getElementById('ex-modal-img');
+            imgEl.onerror = function() {
+                this.src = 'https://dummyimage.com/400x250/2a2a2a/4ecdc4.png&text=' + encodeURIComponent(exName);
+            };
+            imgEl.src = ex.img;
+
+            document.getElementById('ex-modal-desc').innerText = ex.desc;
+            document.getElementById('exercise-modal').style.display = 'flex';
+        }
+
+        function renderAllUI() {
+            document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || '').toUpperCase();
+            document.getElementById('prof-name').innerText = appData.username || '-';
+            document.getElementById('prof-age').innerText = calculateAge(appData.dob) + (appData.dob ? " anni" : "");
+            document.getElementById('prof-height').innerText = (appData.height ? appData.height + " cm" : '-');
+            document.getElementById('prof-weight').innerText = (appData.netWeight ? appData.netWeight + " kg" : '-');
+            document.getElementById('prof-mood').innerText = appData.mood || '-';
+            document.getElementById('prof-sleep').innerText = appData.sleep || '-';
+            document.getElementById('prof-energy').innerText = appData.energy || '-';
+            document.getElementById('total-workouts').innerText = appData.totalWorkouts || 0;
+            document.getElementById('total-meditations').innerText = appData.totalMeditations || 0;
+            document.getElementById('last-feedback').innerText = appData.lastFeedback || 'Nessuno';
+
+            if (appData.currentWorkoutScheme) renderWorkoutScheme(appData.currentWorkoutScheme);
+            else if (currentUsername) generateWorkoutWithAI();
+        }
+
+        function calculateAge(dobString) {
+            if (!dobString) return '-';
+            const diff = Date.now() - new Date(dobString).getTime();
+            return Math.abs(new Date(diff).getUTCFullYear() - 1970);
+        }
+
+        function saveProfile() {
+            let userVal = document.getElementById('input-username').value.trim().toLowerCase();
+            if (!userVal) return alert("Inserisci un ID Utente");
+
+            appData.username = userVal;
+            appData.dob = document.getElementById('input-dob').value;
+            appData.height = document.getElementById('input-height').value;
+            appData.mood = document.getElementById('input-mood').value;
+            appData.sleep = document.getElementById('input-sleep').value;
+            appData.energy = document.getElementById('input-energy').value;
+
+            currentUsername = userVal;
+            localStorage.setItem('fm_user', currentUsername);
+            userRef = db.ref('user_profile/' + currentUsername);
+
+            saveToCloud();
+            closeModal('profile-modal');
+            showDashboardUI();
+            generateWorkoutWithAI();
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(el => el.className = '');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            document.getElementById('nav-' + tabName).classList.add(tabName === 'meditation' ? 'active-meditation' : 'active');
+        }
+
+        function completeWorkout() { 
+            document.getElementById('feedback-card').style.display = 'block'; 
+        }
+
+        function saveFeedbackAndAdjust(fb) {
+            appData.lastFeedback = fb;
+            appData.totalWorkouts = (appData.totalWorkouts || 0) + 1;
+            saveToCloud();
+            document.getElementById('feedback-card').style.display = 'none';
+            alert("Ottimo lavoro! Sessione registrata.");
+        }
+
+        // --- GESTIONE MEDITAZIONE ---
+        let meditationTimerId = null;
+        let meditationSeconds = 300;
+        let isMeditating = false;
+
+        function updateMeditationConfig() {
+            const type = document.getElementById('meditation-type').value;
+            if (type === 'focus') meditationSeconds = 180;
+            else if (type === 'relax') meditationSeconds = 300;
+            else if (type === 'sleep') meditationSeconds = 480;
+            resetMeditation();
+        }
+
+        function toggleMeditation() { 
+            isMeditating ? pauseMeditation() : startMeditation(); 
+        }
+
+        function startMeditation() {
+            isMeditating = true;
+            document.getElementById('btn-start-meditation').innerText = "Pausa";
+            
+            const audio = document.getElementById('meditation-audio');
+            if (document.getElementById('music-toggle').checked) {
+                audio.play().catch(e => console.log("Interazione audio sbloccata:", e));
+            }
+
+            meditationTimerId = setInterval(() => {
+                meditationSeconds--;
+                updateMeditationDisplay();
+
+                if (meditationSeconds <= 0) {
+                    clearInterval(meditationTimerId);
+                    isMeditating = false;
+                    audio.pause();
+                    document.getElementById('btn-start-meditation').innerText = "Avvia";
+                    document.getElementById('meditation-instruction').innerText = "Sessione Completata! 🧘";
+                    appData.totalMeditations = (appData.totalMeditations || 0) + 1;
+                    saveToCloud();
+                }
+            }, 1000);
+        }
+
+        function pauseMeditation() {
+            isMeditating = false;
+            clearInterval(meditationTimerId);
+            document.getElementById('meditation-audio').pause();
+            document.getElementById('btn-start-meditation').innerText = "Riprendi";
+        }
+
+        function resetMeditation() {
+            pauseMeditation();
+            let type = document.getElementById('meditation-type').value;
+            meditationSeconds = type === 'focus' ? 180 : (type === 'sleep' ? 480 : 300);
+            updateMeditationDisplay();
+            document.getElementById('btn-start-meditation').innerText = "Avvia";
+            document.getElementById('meditation-instruction').innerText = "Seleziona l'obiettivo e premi avvia.";
+        }
+
+        function updateMeditationDisplay() {
+            let m = Math.floor(meditationSeconds / 60);
+            let s = meditationSeconds % 60;
+            document.getElementById('meditation-timer').innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+
+            if (isMeditating) {
+                if (meditationSeconds % 12 === 0) {
+                    document.getElementById('meditation-instruction').innerText = "Inhala lentamente ed espandi l'addome...";
+                } else if (meditationSeconds % 6 === 0) {
+                    document.getElementById('meditation-instruction').innerText = "Espirando, rilascia ogni tensione dalle spalle...";
+                }
+            }
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
