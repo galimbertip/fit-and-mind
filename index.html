@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v3.0.1 - Adaptive & Infinite AI Workout Engine -->
+    <!-- Fit & Mind v3.0.2 - Adaptive & Infinite AI Workout Engine -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind v3.0.1</title>
+    <title>Fit & Mind v3.0.2</title>
     <meta name="theme-color" content="#121212">
     
     <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
@@ -155,7 +155,7 @@
 
     <header>
         <div>
-            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v3.0.1</span></h1>
+            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v3.0.2</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div class="header-actions">
@@ -175,7 +175,7 @@
         <!-- BENVENUTO -->
         <div id="welcome-screen" class="card" style="text-align: center; padding: 30px 10px;">
             <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
-            <h2 style="margin-bottom: 5px;">Benvenuto in Fit & Mind v3.0.1</h2>
+            <h2 style="margin-bottom: 5px;">Benvenuto in Fit & Mind v3.0.2</h2>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px;">Adaptive Personal Training & Mind Care</p>
             <button class="btn" style="margin-bottom: 12px;" onclick="openLoginModal()">Accedi al tuo Profilo</button>
             <button class="btn btn-meditation" onclick="openRegisterModal()">Crea Nuovo Profilo</button>
@@ -327,13 +327,21 @@
                 <button onclick="closeModal('changelog-modal')" style="background:none; border:none; color:#aaa; font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
+            <!-- v3.0.2 -->
+            <div class="changelog-version">
+                <span class="version-tag">v3.0.2</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-patch">PATCH</span> Bugfix: Risolto un errore di sintassi JS nell'invocazione dell'API AI che bloccava il caricamento dell'interfaccia e dei pulsanti.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Resilience: Aggiunto controllo preventivo `res.ok` per catturare risposte HTTP 500 dal server Cloud Run evitando il crash del JSON parser.</li>
+                </ul>
+            </div>
+
             <!-- v3.0.1 -->
             <div class="changelog-version">
-                <span class="version-tag">v3.0.1</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <span class="version-tag">v3.0.1</span>
                 <ul class="changelog-list">
                     <li><span class="badge-type badge-patch">PATCH</span> Interfaccia: Integrata la modale interattiva per il Changelog con categorizzazione semantica (Major, Minor, Patch).</li>
-                    <li><span class="badge-type badge-patch">PATCH</span> Refactoring: Consolidato il codice sorgente single-file e sincronizzate le etichette di versione nell'intera UI.</li>
-                    <li><span class="badge-type badge-patch">PATCH</span> Network: Ottimizzata la gestione del fallback in assenza di connessione o in stato offline Firebase.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Refactoring: Consolidato il codice sorgente single-file.</li>
                 </ul>
             </div>
 
@@ -344,7 +352,6 @@
                     <li><span class="badge-type badge-major">MAJOR</span> Re-engineering Engine: Transizione dall'algoritmo statico al motore AI Adattivo (Generative AI Engine via Google Gemini Cloud Run).</li>
                     <li><span class="badge-type badge-major">MAJOR</span> Sincronizzazione Cloud: Abilitata la sincronizzazione in tempo reale su Firebase Realtime Database.</li>
                     <li><span class="badge-type badge-minor">MINOR</span> Modulo Mind Care: Aggiunta la sezione di meditazione guidata con timer flessibile e suoni d'ambiente.</li>
-                    <li><span class="badge-type badge-minor">MINOR</span> Dynamic Profiling: Introduzione del tracciamento dello stato psicofisico quotidiano (Energia, Sonno, Umore) e ciclo di feedback adattivo post-workout.</li>
                 </ul>
             </div>
 
@@ -353,8 +360,6 @@
                 <span class="version-tag">v2.0.0</span>
                 <ul class="changelog-list">
                     <li><span class="badge-type badge-major">MAJOR</span> PWA & Standalone Support: Convertita l'applicazione in Web App installabile con file manifest e Service Worker integrato.</li>
-                    <li><span class="badge-type badge-minor">MINOR</span> UI Redesign: Nuovo layout Dark Theme ad alto contrasto per utilizzo mobile in palestra.</li>
-                    <li><span class="badge-type badge-patch">PATCH</span> Storage: Migrazione dei dati locali da variabili volatili a LocalStorage persistente per dispositivo.</li>
                 </ul>
             </div>
 
@@ -362,7 +367,7 @@
             <div class="changelog-version">
                 <span class="version-tag">v1.0.0</span>
                 <ul class="changelog-list">
-                    <li><span class="badge-type badge-major">MAJOR</span> Release Iniziale: Scheda di allenamento base a corpo libero con timer integrato e gestione profili utente locale.</li>
+                    <li><span class="badge-type badge-major">MAJOR</span> Release Iniziale: Scheda di allenamento base a corpo libero con timer integrato.</li>
                 </ul>
             </div>
 
@@ -374,7 +379,7 @@
     <audio id="meditation-audio" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=meditation-relaxing-112191.mp3"></audio>
 
     <footer>
-        Fit & Mind v3.0.1 - Infinite Adaptive AI Engine<br>
+        Fit & Mind v3.0.2 - Infinite Adaptive AI Engine<br>
         <span onclick="openChangelogModal()">Visualizza Changelog Completo</span>
     </footer>
 
@@ -390,7 +395,6 @@
             appId: "1:591471755393:web:b234ea3068fd57d319cd80"
         };
 
-        // Endpoint Cloud Run per l'integrazione AI
         const GEMINI_ENDPOINT = "https://generate-image-prompt-591471755393.europe-west1.run.app";
 
         try {
@@ -503,11 +507,11 @@
             }
         }
 
-async function generateWorkoutWithAI() {
-    const rationaleEl = document.getElementById('ai-rationale');
-    rationaleEl.innerText = "Analisi del tuo percorso e creazione scheda evolutiva quotidiana...";
+        async function generateWorkoutWithAI() {
+            const rationaleEl = document.getElementById('ai-rationale');
+            rationaleEl.innerText = "Analisi del tuo percorso e creazione scheda evolutiva quotidiana...";
 
-    const prompt = `Sei un Personal Trainer professionista e preparatore atletico.
+            const prompt = `Sei un Personal Trainer professionista e preparatore atletico.
 Genera una scheda di allenamento adattiva ed EVOLUTIVA per la giornata di oggi.
 
 PROFILO UTENTE ED EVOLUZIONE:
@@ -537,56 +541,32 @@ Rispondi ESCLUSIVAMENTE con un JSON puro valido (senza markdown o altro testo):
   ]
 }`;
 
-    try {
-        const res = await fetch(GEMINI_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: prompt })
-        });
-
-        // Verifica se il server Cloud Run ha restituito errore (es. 500 o 404)
-        if (!res.ok) {
-            throw new Error(`Errore Server Backend: Status ${res.status}`);
-        }
-
-        const data = await res.json();
-        let rawText = (data.text || data.response || "").replace(/```json/g, "").replace(/```/g, "").trim();
-        
-        if (!rawText) throw new Error("Risposta vuota dall'AI");
-
-        const parsedScheme = JSON.parse(rawText);
-        
-        appData.currentWorkoutScheme = parsedScheme;
-        saveToCloud();
-        renderWorkoutScheme(parsedScheme);
-
-    } catch (err) {
-        console.error("Errore generazione AI:", err);
-        renderWorkoutScheme({
-            rationale: "Impossibile contattare il servizio AI (Errore 500). Scheda di ripristino temporanea.",
-            warmup: [{ name: "Circonduzioni Spalle", qty: "30", unit: "sec", desc: "Ruota le spalle in modo fluido mantenendo la postura eretta." }],
-            workout: [{ name: "Squat a corpo libero", qty: "12", unit: "rep", desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro." }]
-        });
-    }
-}
-
             try {
                 const res = await fetch(GEMINI_ENDPOINT, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt })
                 });
+
+                if (!res.ok) {
+                    throw new Error(`Errore Server Backend: Status ${res.status}`);
+                }
+
                 const data = await res.json();
                 let rawText = (data.text || data.response || "").replace(/```json/g, "").replace(/```/g, "").trim();
+                
+                if (!rawText) throw new Error("Risposta vuota dall'AI");
+
                 const parsedScheme = JSON.parse(rawText);
                 
                 appData.currentWorkoutScheme = parsedScheme;
                 saveToCloud();
                 renderWorkoutScheme(parsedScheme);
+
             } catch (err) {
                 console.error("Errore generazione AI:", err);
                 renderWorkoutScheme({
-                    rationale: "Scheda di ripristino temporanea.",
+                    rationale: "Impossibile contattare il servizio AI (Errore Server). Scheda di ripristino temporanea.",
                     warmup: [{ name: "Circonduzioni Spalle", qty: "30", unit: "sec", desc: "Ruota le spalle in modo fluido mantenendo la postura eretta." }],
                     workout: [{ name: "Squat a corpo libero", qty: "12", unit: "rep", desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro." }]
                 });
