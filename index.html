@@ -470,7 +470,13 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDviQAQZ8FNfJsJz-Z-azgCR73l4CqThTs",
             authDomain: "fit-and-mind.firebaseapp.com",
-            databaseURL: "https://fit-and-mind-default-rtdb.europe-west1.firebasedatabase.app",
+            
+            /* =========================================================================
+               INSERISCI QUI IL TUO ENDPOINT / URL FIREBASE DATABASE
+               Es: databaseURL: "https://fit-and-mind-default-rtdb.europe-west1.firebasedatabase.app"
+               ========================================================================= */
+            databaseURL: "https://generate-image-prompt-591471755393.europe-west1.run.app",
+            
             projectId: "fit-and-mind",
             storageBucket: "fit-and-mind.firebasestorage.app",
             messagingSenderId: "591471755393",
@@ -712,42 +718,55 @@
             document.getElementById('total-workouts').innerText = appData.totalWorkouts || 0;
             document.getElementById('total-meditations').innerText = appData.totalMeditations || 0;
             document.getElementById('stat-multiplier').innerText = "x" + (appData.levelMultiplier || 1.0).toFixed(1);
-
-            checkBirthday();
         }
 
         function calculateAge(dobString) {
-            if (!dobString) return "-";
-            let today = new Date();
-            let birth = new Date(dobString);
-            let age = today.getFullYear() - birth.getFullYear();
-            let m = today.getMonth() - birth.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-            return age;
-        }
-
-        function checkBirthday() {
-            if (!appData.dob) return;
-            let today = new Date();
-            let birth = new Date(appData.dob);
-            if (today.getMonth() === birth.getMonth() && today.getDate() === birth.getDate()) {
-                document.getElementById('bday-banner').style.display = 'block';
-            }
+            if (!dobString) return '-';
+            const dob = new Date(dobString);
+            const diff = Date.now() - dob.getTime();
+            const ageDate = new Date(diff);
+            return Math.abs(ageDate.getUTCFullYear() - 1970);
         }
 
         function calculateNetWeight() {
             let gross = parseFloat(document.getElementById('input-gross-weight').value) || 0;
-            let tare = 0;
+            let deduction = 0;
             document.querySelectorAll('.cloth-check:checked').forEach(cb => {
-                tare += parseFloat(cb.value);
+                deduction += parseFloat(cb.value);
             });
-            let net = Math.max(0, gross - tare);
-            document.getElementById('net-weight-display').innerText = net.toFixed(2) + " Kg";
-            return { gross, net };
+            let net = Math.max(0, gross - deduction);
+            document.getElementById('net-weight-display').innerText = net.toFixed(1) + " Kg";
+            return net.toFixed(1);
+        }
+
+        function saveProfile() {
+            let user = document.getElementById('input-username').value.trim().toLowerCase();
+            if (!user) {
+                alert("Il Nome Utente ID è obbligatorio!");
+                return;
+            }
+
+            currentUsername = user;
+            localStorage.setItem('fm_user', currentUsername);
+            userRef = db.ref('user_profile/' + currentUsername);
+
+            appData.username = user;
+            appData.dob = document.getElementById('input-dob').value;
+            appData.height = document.getElementById('input-height').value;
+            appData.grossWeight = document.getElementById('input-gross-weight').value;
+            appData.netWeight = calculateNetWeight();
+            appData.lifestyle = document.getElementById('input-lifestyle').value;
+            appData.mood = document.getElementById('input-mood').value;
+            appData.sleep = document.getElementById('input-sleep').value;
+            appData.energy = document.getElementById('input-energy').value;
+
+            saveToCloud();
+            closeModal('profile-modal');
+            showDashboardUI();
         }
 
         function openProfileModal() {
-            document.getElementById('modal-profile-title').innerText = "Aggiorna Profilo";
+            document.getElementById('modal-profile-title').innerText = "Modifica Profilo";
             document.getElementById('input-username').value = appData.username || currentUsername || '';
             document.getElementById('input-dob').value = appData.dob || '';
             document.getElementById('input-height').value = appData.height || '';
@@ -760,148 +779,112 @@
             document.getElementById('profile-modal').style.display = 'flex';
         }
 
-        function saveProfile() {
-            let newUsername = document.getElementById('input-username').value.trim().toLowerCase();
-            if (!newUsername) {
-                alert("Inserisci un Nome Utente!");
-                return;
-            }
-
-            let { gross, net } = calculateNetWeight();
-
-            appData.username = newUsername;
-            appData.dob = document.getElementById('input-dob').value;
-            appData.height = parseFloat(document.getElementById('input-height').value) || '';
-            appData.grossWeight = gross;
-            appData.netWeight = net;
-            appData.lifestyle = document.getElementById('input-lifestyle').value;
-            appData.mood = document.getElementById('input-mood').value;
-            appData.sleep = document.getElementById('input-sleep').value;
-            appData.energy = document.getElementById('input-energy').value;
-
-            if (newUsername !== currentUsername) {
-                currentUsername = newUsername;
-                localStorage.setItem('fm_user', currentUsername);
-                userRef = db.ref('user_profile/' + currentUsername);
-                initFirebaseSync();
-            } else {
-                saveToCloud();
-            }
-
-            closeModal('profile-modal');
-            showDashboardUI();
-            renderAllUI();
-        }
-
-        function switchTab(tab) {
-            stopAudio();
+        function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('nav button').forEach(el => {
-                el.classList.remove('active');
-                el.classList.remove('active-meditation');
-            });
+            document.querySelectorAll('nav button').forEach(el => el.className = '');
 
-            document.getElementById('tab-' + tab).classList.add('active');
-            let btn = document.getElementById('nav-' + tab);
-            if (tab === 'meditation') btn.classList.add('active-meditation');
-            else btn.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            let btn = document.getElementById('nav-' + tabName);
+            if (tabName === 'meditation') {
+                btn.classList.add('active-meditation');
+            } else {
+                btn.classList.add('active');
+            }
         }
 
         function completeWorkout() {
             document.getElementById('feedback-card').style.display = 'block';
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
-        function adjustDifficulty(change) {
-            if (change === 1) appData.levelMultiplier += 0.1;
-            if (change === -1 && appData.levelMultiplier > 0.6) appData.levelMultiplier -= 0.1;
+        function adjustDifficulty(delta) {
+            let mult = appData.levelMultiplier || 1.0;
+            if (delta === -1) mult = Math.max(0.5, mult - 0.1);
+            else if (delta === 1) mult = Math.min(2.5, mult + 0.1);
+
+            appData.levelMultiplier = mult;
             appData.totalWorkouts = (appData.totalWorkouts || 0) + 1;
             saveToCloud();
+
             document.getElementById('feedback-card').style.display = 'none';
-            renderAllUI();
+            alert("Allenamento salvato! Moltiplicatore aggiornato a x" + mult.toFixed(1));
         }
 
-        // Timer e Meditazione con Musica
-        let meditationInterval = null;
+        // --- GESTIONE MEDITAZIONE E AUDIO ---
+        let meditationTimerId = null;
         let meditationSeconds = 300;
         let isMeditating = false;
 
-        const meditationSteps = [
-            { time: 270, text: "Chiudi gli occhi e porta l'attenzione sul respiro..." },
-            { time: 210, text: "Inspira lentamente dal naso per 4 secondi, espira dalla bocca..." },
-            { time: 150, text: "Rilassa le spalle, il collo e sciogli ogni tensione accumulata..." },
-            { time: 90, text: "Visualizza una sensazione di calma e stabilità che pervade il corpo..." },
-            { time: 30, text: "Preparati a tornare presente, mantenendo questa sensazione di chiarezza." }
-        ];
-
-        function playAudio() {
-            let audio = document.getElementById('meditation-audio');
-            let toggle = document.getElementById('music-toggle');
-            if (toggle.checked) {
-                audio.volume = 0.5;
-                audio.play().catch(e => console.log("Audio autoplay gestito dal browser"));
-            }
-        }
-
-        function stopAudio() {
-            let audio = document.getElementById('meditation-audio');
-            audio.pause();
-            audio.currentTime = 0;
-        }
-
         function toggleMeditation() {
-            let btn = document.getElementById('btn-start-meditation');
             if (isMeditating) {
-                clearInterval(meditationInterval);
-                isMeditating = false;
-                btn.innerText = "Riprendi";
-                stopAudio();
+                pauseMeditation();
             } else {
-                isMeditating = true;
-                btn.innerText = "Pausa";
-                playAudio();
-
-                meditationInterval = setInterval(() => {
-                    meditationSeconds--;
-                    updateMeditationDisplay();
-                    
-                    if (document.getElementById('meditation-mode').value === 'guided') {
-                        let step = meditationSteps.find(s => s.time === meditationSeconds);
-                        if (step) document.getElementById('meditation-instruction').innerText = step.text;
-                    }
-
-                    if (meditationSeconds <= 0) {
-                        clearInterval(meditationInterval);
-                        isMeditating = false;
-                        stopAudio();
-                        appData.totalMeditations = (appData.totalMeditations || 0) + 1;
-                        saveToCloud();
-                        alert("Sessione di meditazione completata!");
-                        resetMeditation();
-                        renderAllUI();
-                    }
-                }, 1000);
+                startMeditation();
             }
+        }
+
+        function startMeditation() {
+            isMeditating = true;
+            document.getElementById('btn-start-meditation').innerText = "Pausa";
+            
+            if (document.getElementById('music-toggle').checked) {
+                document.getElementById('meditation-audio').play().catch(() => {});
+            }
+
+            meditationTimerId = setInterval(() => {
+                meditationSeconds--;
+                updateMeditationDisplay();
+
+                if (meditationSeconds <= 0) {
+                    clearInterval(meditationTimerId);
+                    isMeditating = false;
+                    stopAudio();
+                    document.getElementById('btn-start-meditation').innerText = "Avvia";
+                    document.getElementById('meditation-instruction').innerText = "Sessione Completata! 🎉";
+                    
+                    appData.totalMeditations = (appData.totalMeditations || 0) + 1;
+                    saveToCloud();
+                }
+            }, 1000);
+        }
+
+        function pauseMeditation() {
+            isMeditating = false;
+            clearInterval(meditationTimerId);
+            stopAudio();
+            document.getElementById('btn-start-meditation').innerText = "Riprendi";
         }
 
         function resetMeditation() {
-            clearInterval(meditationInterval);
-            isMeditating = false;
-            stopAudio();
+            pauseMeditation();
             meditationSeconds = 300;
+            updateMeditationDisplay();
             document.getElementById('btn-start-meditation').innerText = "Avvia";
             document.getElementById('meditation-instruction').innerText = "Premi avvia per iniziare.";
-            updateMeditationDisplay();
+        }
+
+        function stopAudio() {
+            const audio = document.getElementById('meditation-audio');
+            audio.pause();
+            audio.currentTime = 0;
         }
 
         function updateMeditationDisplay() {
             let m = Math.floor(meditationSeconds / 60);
             let s = meditationSeconds % 60;
             document.getElementById('meditation-timer').innerText = 
-                `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+
+            if (document.getElementById('meditation-mode').value === 'guided' && isMeditating) {
+                if (meditationSeconds > 240) document.getElementById('meditation-instruction').innerText = "Inhala lentamente ed espandi l'addome...";
+                else if (meditationSeconds > 180) document.getElementById('meditation-instruction').innerText = "Trattieni il respiro per qualche secondo...";
+                else if (meditationSeconds > 120) document.getElementById('meditation-instruction').innerText = "Escirando, rilascia ogni tensione dalle spalle...";
+                else if (meditationSeconds > 60) document.getElementById('meditation-instruction').innerText = "Rimani nel momento presente, ascolta il tuo corpo...";
+                else document.getElementById('meditation-instruction').innerText = "Unisciti all'ultimo minuto di profondo rilassamento...";
+            }
         }
 
-        initApp();
+        // Inizializzazione all'avvio della pagina
+        window.onload = initApp;
     </script>
 </body>
 </html>
