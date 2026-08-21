@@ -3,15 +3,14 @@
 <head>
     <!-- 
       Fit & Mind - Web App
-      Versione: v1.4.1 (PG Edition)
-      Novità: GIF animate tecniche per ogni esercizio (Tasto ℹ️), Musica Meditazione, Cloud Function Gemini integrata.
+      Versione: v2.0.0 (AI Adaptive Edition)
+      Novità: Generazione dinamica della scheda con Gemini AI basata su stato psicofisico e progressione.
     -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind (PG Edition v1.4.1)</title>
+    <title>Fit & Mind (AI Adaptive v2.0)</title>
     <meta name="theme-color" content="#121212">
     
-    <!-- Icone per PWA / Scorciatoia Schermata Home -->
     <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
     
@@ -45,7 +44,6 @@
             box-sizing: border-box;
             text-align: center;
             border-bottom: 1px solid #333;
-            position: relative;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -197,19 +195,21 @@
         }
         .clothes-grid label { display: flex; align-items: center; gap: 5px; color: #bbb; cursor: pointer; }
 
-        #welcome-screen {
-            text-align: center;
-            padding: 30px 10px;
-        }
-        #welcome-screen img {
-            width: 100px;
-            height: 100px;
+        #welcome-screen { text-align: center; padding: 30px 10px; }
+        #welcome-screen img { width: 100px; height: 100px; margin-bottom: 15px; }
+
+        .ai-rationale-box {
+            background: #182828;
+            border-left: 4px solid var(--accent-meditation);
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #d1f2f0;
             margin-bottom: 15px;
+            font-style: italic;
         }
 
-        footer {
-            font-size: 0.75rem; color: #666; text-align: center; padding: 15px; margin-top: auto;
-        }
+        footer { font-size: 0.75rem; color: #666; text-align: center; padding: 15px; margin-top: auto; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -219,7 +219,7 @@
 
     <header>
         <div class="header-title-box">
-            <h1>FIT & MIND <span style="font-size: 0.7rem; color: #888;">PG Edition</span></h1>
+            <h1>FIT & MIND <span style="font-size: 0.7rem; color: #888;">AI Edition</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div>
@@ -229,7 +229,7 @@
     </header>
 
     <nav id="app-nav">
-        <button id="nav-workout" class="active" onclick="switchTab('workout')">Allenamento</button>
+        <button id="nav-workout" class="active" onclick="switchTab('workout')">Allenamento AI</button>
         <button id="nav-meditation" onclick="switchTab('meditation')">Meditazione</button>
         <button id="nav-stats" onclick="switchTab('stats')">Profilo & Mind</button>
     </nav>
@@ -240,45 +240,37 @@
             <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Fit & Mind Logo">
             <h2 style="font-size: 1.4rem; margin-bottom: 5px;">Benvenuto in Fit & Mind</h2>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px;">
-                Personal Training & Mind Care Sync
+                Adaptive Workout & Mind Care Powered by AI
             </p>
 
-            <button class="btn" style="margin-bottom: 12px;" onclick="openLoginModal()">
-                Accedi al tuo Profilo
-            </button>
-            <button class="btn btn-meditation" onclick="openRegisterModal()">
-                Crea Nuovo Profilo
-            </button>
+            <button class="btn" style="margin-bottom: 12px;" onclick="openLoginModal()">Accedi al tuo Profilo</button>
+            <button class="btn btn-meditation" onclick="openRegisterModal()">Crea Nuovo Profilo</button>
         </div>
 
-        <!-- TAB ALLENAMENTO -->
+        <!-- TAB ALLENAMENTO ADATTIVO -->
         <div id="tab-workout" class="tab-content">
-            <div id="bday-banner" class="card" style="display:none; background: linear-gradient(135deg, #ff6b6b, #4ecdc4); color: black;">
-                <h2 style="color: black; margin: 0;">🎉 BUON COMPLEANNO! 🎂</h2>
-                <p style="font-size:0.85rem; margin: 5px 0 0 0;">Oggi per te una sessione speciale di festeggiamento e rigenerazione!</p>
-            </div>
+            <div class="card" style="border: 1px solid var(--accent-meditation);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="margin: 0; color: var(--accent-meditation);">✨ Scheda Generata da Gemini</h2>
+                    <button class="btn btn-meditation" style="width: auto; padding: 6px 12px; margin: 0; font-size: 0.8rem;" onclick="generateWorkoutWithAI()">🔄 Rigenera</button>
+                </div>
+                
+                <div id="ai-rationale" class="ai-rationale-box">
+                    L'IA analizzerà il tuo stato psicofisico e lo storico per creare una scheda personalizzata...
+                </div>
 
-            <div class="card">
-                <h2>1. Riscaldamento (3-4 min)</h2>
-                <div class="exercise-item"><span>Rotazioni collo & spalle</span><span>30 sec cad.</span></div>
-                <div class="exercise-item"><span>Torsioni busto & anche</span><span>30 sec cad.</span></div>
-                <div class="exercise-item"><span>Marcia a ginocchia alte</span><span>60 sec</span></div>
-            </div>
-
-            <div class="card">
-                <h2>2. Circuito Principale (<span id="current-level-display">Intensità x1.0</span>)</h2>
-                <p style="font-size: 0.8rem; color: #aaa;">Esegui 2-3 giri. Clicca ℹ️ per vedere la figura dell'esercizio.</p>
                 <div id="workout-list"></div>
-                <button class="btn" onclick="completeWorkout()">Ho Completato l'Allenamento!</button>
+
+                <button class="btn" style="margin-top: 15px;" onclick="completeWorkout()">Ho Completato l'Allenamento!</button>
             </div>
 
             <div id="feedback-card" class="card" style="display: none;">
                 <h2>Com'è andata la sessione?</h2>
-                <p style="font-size: 0.8rem; color: #aaa;">In base alla risposta adatteremo l'intensità della prossima sessione.</p>
+                <p style="font-size: 0.8rem; color: #aaa;">L'IA terrà conto di questo feedback per sintonizzare i prossimi allenamenti.</p>
                 <div style="display: flex; gap: 8px; margin-top: 10px;">
-                    <button class="btn btn-secondary" onclick="adjustDifficulty(-1)">Troppo Duro</button>
-                    <button class="btn btn-secondary" onclick="adjustDifficulty(0)">Giusto</button>
-                    <button class="btn btn-secondary" onclick="adjustDifficulty(1)">Troppo Facile</button>
+                    <button class="btn btn-secondary" onclick="saveFeedbackAndAdjust('Troppo Duro')">Troppo Duro</button>
+                    <button class="btn btn-secondary" onclick="saveFeedbackAndAdjust('Giusto')">Giusto</button>
+                    <button class="btn btn-secondary" onclick="saveFeedbackAndAdjust('Troppo Facile')">Troppo Facile</button>
                 </div>
             </div>
         </div>
@@ -297,7 +289,7 @@
 
                 <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
                     <input type="checkbox" id="music-toggle" checked style="width: auto;">
-                    <label for="music-toggle" style="margin: 0; cursor: pointer;">🎵 Musica rilassante di sottofondo (Creative Commons)</label>
+                    <label for="music-toggle" style="margin: 0; cursor: pointer;">🎵 Musica rilassante di sottofondo</label>
                 </div>
 
                 <div class="timer-display" id="meditation-timer">05:00</div>
@@ -332,25 +324,16 @@
                 <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Dati Fisici & Mentali</button>
             </div>
 
-            <!-- CARD AI GEMINI GENERATOR -->
-            <div class="card" style="border: 1px solid var(--accent-meditation);">
-                <h2 style="color: var(--accent-meditation);">✨ Frase Motivazionale AI (Gemini)</h2>
-                <p id="ai-motivation-text" style="font-size: 0.85rem; color: #ddd; font-style: italic;">
-                    Clicca il pulsante sotto per generare un pensiero personalizzato tramite la tua Cloud Function.
-                </p>
-                <button class="btn btn-meditation" onclick="fetchGeminiPrompt()">Genera Frase con Gemini</button>
-            </div>
-
             <div class="card">
-                <h2>Statistiche Sessioni</h2>
+                <h2>Statistiche & Storico AI</h2>
                 <div class="exercise-item"><span>Allenamenti completati:</span><strong id="total-workouts">0</strong></div>
                 <div class="exercise-item"><span>Meditazioni completate:</span><strong id="total-meditations">0</strong></div>
-                <div class="exercise-item"><span>Moltiplicatore Attuale:</span><strong id="stat-multiplier">x1.0</strong></div>
+                <div class="exercise-item"><span>Ultimo Feedback Registrato:</span><strong id="last-feedback" style="color: var(--accent-meditation);">-</strong></div>
             </div>
         </div>
     </main>
 
-    <!-- MODALE GUIDA ESERCIZIO (GIF ANIMATE) -->
+    <!-- MODALE GUIDA ESERCIZIO (GIF) -->
     <div id="exercise-modal" class="modal-overlay" style="display:none;">
         <div class="card" style="max-width: 420px; width: 90%; text-align: center;">
             <h2 id="ex-modal-title">Guida Esercizio</h2>
@@ -468,11 +451,11 @@
         </div>
     </div>
 
-    <!-- AUDIO MEDITAZIONE CREATIVE COMMONS -->
+    <!-- AUDIO MEDITAZIONE -->
     <audio id="meditation-audio" loop src="https://assets.mixkit.co/music/preview/mixkit-deep-meditation-109.mp3"></audio>
 
     <footer>
-        v1.4.1 - PG Edition | Developed for Personal Training & Mind
+        v2.0.0 - AI Adaptive Edition | Developed for Personal Training & Mind
     </footer>
 
     <script>
@@ -507,51 +490,42 @@
             mood: 'Sereno / Equilibrato',
             sleep: '3/5 - Discreto',
             energy: 'Medio (Batteria 50%)',
-            levelMultiplier: 1.0,
             totalWorkouts: 0,
-            totalMeditations: 0
+            totalMeditations: 0,
+            lastFeedback: 'Nessuno',
+            currentWorkoutScheme: null
         };
 
-        // ARRAY ESERCIZI CON GIF ANIMATE SU CDN PUBBLICA SENZA BLOCCHI HOTLINKING
-const baseExercises = [
-    { 
-        name: "Piegamenti facilitati (ginocchia)", 
-        baseRep: 10, 
-        unit: "rep",
-        img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Kneeling_push-up.gif",
-        desc: "Poggia le ginocchia a terra, mantieni il core ingaggiato e abbassa il petto verso il pavimento piegando i gomiti a circa 45 gradi."
-    },
-    { 
-        name: "Squat a corpo libero", 
-        baseRep: 12, 
-        unit: "rep",
-        img: "https://upload.wikimedia.org/wikipedia/commons/8/82/Squat.gif",
-        desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro come per sederti. Mantieni il petto alto e la schiena dritta."
-    },
-    { 
-        name: "Plank isometrico", 
-        baseRep: 25, 
-        unit: "sec",
-        img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Plank_exercise.gif",
-        desc: "Poggia sugli avambracci e sulle punte dei piedi. Mantieni il corpo in linea retta senza far cedere il bacino o sollevare i glutei."
-    },
-    { 
-        name: "Crunch Addominali", 
-        baseRep: 15, 
-        unit: "rep",
-        img: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Crunch_exercise.gif",
-        desc: "Sdraiato sulla schiena, piega le ginocchia e solleva le spalle verso il bacino contraendo l'addome. Evita di tirare il collo con le mani."
-    },
-    { 
-        name: "Affondi posteriori alternati", 
-        baseRep: 10, 
-        unit: "rep/gamba",
-        img: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Reverse_Lunge.gif",
-        desc: "Fai un passo indietro piegando entrambe le ginocchia fino a circa 90 gradi. Spingi sul piede anteriore per tornare alla posizione di partenza."
-    }
-];
+        // DIZIONARIO UFFICIALE DI ESERCIZI SUPPORTATI DALL'APP (CON GIF GARANTITE)
+        const exerciseLibrary = {
+            "Piegamenti sulle ginocchia": {
+                unit: "rep",
+                img: "https://upload.wikimedia.org/wikipedia/commons/3/3a/Kneeling_push-up.gif",
+                desc: "Poggia le ginocchia a terra, mantieni il core ingaggiato e abbassa il petto verso il pavimento piegando i gomiti a 45 gradi."
+            },
+            "Squat a corpo libero": {
+                unit: "rep",
+                img: "https://upload.wikimedia.org/wikipedia/commons/8/82/Squat.gif",
+                desc: "Piedi a larghezza spalle, scendi spingendo il bacino all'indietro. Mantieni il petto alto e la schiena dritta."
+            },
+            "Plank isometrico": {
+                unit: "sec",
+                img: "https://upload.wikimedia.org/wikipedia/commons/1/1a/Plank_exercise.gif",
+                desc: "Poggia sugli avambracci e sulle punte dei piedi. Mantieni il corpo in linea retta senza far cedere il bacino."
+            },
+            "Crunch Addominali": {
+                unit: "rep",
+                img: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Crunch_exercise.gif",
+                desc: "Sdraiato sulla schiena, piega le ginocchia e solleva le spalle verso il bacino contraendo l'addome."
+            },
+            "Affondi posteriori": {
+                unit: "rep/gamba",
+                img: "https://upload.wikimedia.org/wikipedia/commons/7/7b/Reverse_Lunge.gif",
+                desc: "Fai un passo indietro piegando entrambe le ginocchia a 90 gradi. Spingi sul piede anteriore per risalire."
+            }
+        };
 
-        // --- INATTIVITÀ (15 minuti) ---
+        // --- INATTIVITÀ (15 min) ---
         let inactivityTimer;
         const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
 
@@ -565,9 +539,7 @@ const baseExercises = [
             }
         }
 
-        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, resetInactivityTimer, true);
-        });
+        ['click', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(e => document.addEventListener(e, resetInactivityTimer, true));
 
         function logout() {
             stopAudio();
@@ -609,10 +581,7 @@ const baseExercises = [
 
         function executeLogin() {
             let input = document.getElementById('login-username-input').value.trim().toLowerCase();
-            if (!input) {
-                alert("Inserisci un Nome Utente valido!");
-                return;
-            }
+            if (!input) return alert("Inserisci un Nome Utente valido!");
             currentUsername = input;
             localStorage.setItem('fm_user', currentUsername);
             closeModal('login-modal');
@@ -635,19 +604,7 @@ const baseExercises = [
             document.getElementById('profile-modal').style.display = 'flex';
         }
 
-        function openExerciseInfo(index) {
-            let ex = baseExercises[index];
-            document.getElementById('ex-modal-title').innerText = ex.name;
-            let imgEl = document.getElementById('ex-modal-img');
-            imgEl.src = ex.img;
-            imgEl.alt = ex.name;
-            document.getElementById('ex-modal-desc').innerText = ex.desc;
-            document.getElementById('exercise-modal').style.display = 'flex';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
         function initFirebaseSync() {
             if (!userRef) return;
@@ -660,9 +617,7 @@ const baseExercises = [
                     saveToCloud();
                 }
                 renderAllUI();
-            }, (error) => {
-                updateBadge("Offline / Errore", false);
-            });
+            }, () => updateBadge("Offline / Errore", false));
         }
 
         function saveToCloud() {
@@ -679,29 +634,107 @@ const baseExercises = [
             badge.className = "sync-status-badge " + (isOnline ? "sync-online" : "sync-offline");
         }
 
-        function renderAllUI() {
-            document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || '').toUpperCase();
-            document.getElementById('current-level-display').innerText = "Intensità x" + (appData.levelMultiplier || 1.0).toFixed(1);
+        // --- GENERAZIONE DINAMICA SCHEDA CON GEMINI ---
+        async function generateWorkoutWithAI() {
+            const rationaleEl = document.getElementById('ai-rationale');
+            const listEl = document.getElementById('workout-list');
+            rationaleEl.innerText = "🤖 Gemini sta analizzando il tuo stato psicofisico e lo storico...";
+            listEl.innerHTML = '<p style="text-align:center; color:#aaa;">Generazione scheda in corso...</p>';
 
-            // Render esercizi
+            const availableNames = Object.keys(exerciseLibrary).join(", ");
+            const userAge = calculateAge(appData.dob);
+
+            const prompt = `Sei un Personal Trainer AI integrato nell'app Fit & Mind.
+Dati utente:
+- Età: ${userAge} anni
+- IMC: ${document.getElementById('prof-bmi').innerText}
+- Umore attuale: ${appData.mood}
+- Qualità Sonno: ${appData.sleep}
+- Energia: ${appData.energy}
+- Allenamenti svolti finora: ${appData.totalWorkouts}
+- Feedback dell'ultima sessione: ${appData.lastFeedback}
+
+Esercizi consentiti (usa ESATTAMENTE ed ESCLUSIVAMENTE questi nomi):
+[${availableNames}]
+
+Crea una sessione di allenamento personalizzata scegliendo da 3 a 5 esercizi dalla lista sopra con target adeguati allo stato psicofisico.
+Rispondi RIGOROSAMENTE ed ESCLUSIVAMENTE in formato JSON valido, senza markdown, senza virgolette extra, strutturato così:
+{
+  "rationale": "Breve frase motivazionale e spiegazione del perché hai scelto questa scheda oggi.",
+  "exercises": [
+    {"name": "Nome Esercizio Esatto", "qty": 10},
+    {"name": "Nome Esercizio Esatto", "qty": 30}
+  ]
+}`;
+
+            try {
+                const res = await fetch(GEMINI_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (!res.ok) throw new Error("Errore chiamata HTTP: " + res.status);
+                const data = await res.json();
+                
+                let rawText = data.text || data.response || "";
+                rawText = rawText.replace(/```json/g, "").replace(/```/g, "").trim();
+                
+                const parsedScheme = JSON.parse(rawText);
+                appData.currentWorkoutScheme = parsedScheme;
+                saveToCloud();
+                renderWorkoutScheme(parsedScheme);
+
+            } catch (err) {
+                console.error("Errore generazione AI:", err);
+                rationaleEl.innerText = "⚠️ Scheda predefinita caricata (Impossibile contattare l'AI al momento).";
+                // Fallback automatico
+                renderWorkoutScheme({
+                    rationale: "Sessione standard equilibrata.",
+                    exercises: [
+                        { name: "Squat a corpo libero", qty: 12 },
+                        { name: "Piegamenti sulle ginocchia", qty: 10 },
+                        { name: "Plank isometrico", qty: 25 }
+                    ]
+                });
+            }
+        }
+
+        function renderWorkoutScheme(scheme) {
+            if (!scheme) return;
+            document.getElementById('ai-rationale').innerText = `"${scheme.rationale}"`;
             const list = document.getElementById('workout-list');
             list.innerHTML = '';
-            let mult = appData.levelMultiplier || 1.0;
-            baseExercises.forEach((ex, idx) => {
-                let target = Math.round(ex.baseRep * mult);
+
+            scheme.exercises.forEach((ex) => {
+                const libData = exerciseLibrary[ex.name] || { unit: "rep", img: "", desc: "" };
                 let div = document.createElement('div');
                 div.className = 'exercise-item';
                 div.innerHTML = `
                     <div>
                         <span>${ex.name}</span>
-                        <button class="info-btn" onclick="openExerciseInfo(${idx})" title="Guida esercizio">ℹ️</button>
+                        <button class="info-btn" onclick="openExerciseInfo('${ex.name}')">ℹ️</button>
                     </div>
-                    <strong>${target} ${ex.unit}</strong>
+                    <strong>${ex.qty} ${libData.unit}</strong>
                 `;
                 list.appendChild(div);
             });
+        }
 
-            // Render Profilo Fisico & Mentale
+        function openExerciseInfo(exName) {
+            const ex = exerciseLibrary[exName];
+            if (!ex) return;
+            document.getElementById('ex-modal-title').innerText = exName;
+            let imgEl = document.getElementById('ex-modal-img');
+            imgEl.src = ex.img;
+            imgEl.alt = exName;
+            document.getElementById('ex-modal-desc').innerText = ex.desc;
+            document.getElementById('exercise-modal').style.display = 'flex';
+        }
+
+        function renderAllUI() {
+            document.getElementById('user-header-name').innerText = "Profilo: " + (appData.username || currentUsername || '').toUpperCase();
+            
             document.getElementById('prof-name').innerText = appData.username || '-';
             document.getElementById('prof-age').innerText = calculateAge(appData.dob) + (appData.dob ? " anni" : "");
             document.getElementById('prof-height').innerText = appData.height ? appData.height + " cm" : '-';
@@ -712,14 +745,10 @@ const baseExercises = [
             document.getElementById('prof-sleep').innerText = appData.sleep || '-';
             document.getElementById('prof-energy').innerText = appData.energy || '-';
 
-            // IMC
             if (appData.height && appData.netWeight) {
                 let hM = appData.height / 100;
                 let bmi = (appData.netWeight / (hM * hM)).toFixed(1);
-                let cat = "Normopeso";
-                if (bmi < 18.5) cat = "Sottopeso";
-                else if (bmi >= 25 && bmi < 30) cat = "Sovrappeso";
-                else if (bmi >= 30) cat = "Obesità";
+                let cat = bmi < 18.5 ? "Sottopeso" : (bmi < 25 ? "Normopeso" : (bmi < 30 ? "Sovrappeso" : "Obesità"));
                 document.getElementById('prof-bmi').innerText = `${bmi} (${cat})`;
             } else {
                 document.getElementById('prof-bmi').innerText = '-';
@@ -727,23 +756,26 @@ const baseExercises = [
 
             document.getElementById('total-workouts').innerText = appData.totalWorkouts || 0;
             document.getElementById('total-meditations').innerText = appData.totalMeditations || 0;
-            document.getElementById('stat-multiplier').innerText = "x" + (appData.levelMultiplier || 1.0).toFixed(1);
+            document.getElementById('last-feedback').innerText = appData.lastFeedback || 'Nessuno';
+
+            if (appData.currentWorkoutScheme) {
+                renderWorkoutScheme(appData.currentWorkoutScheme);
+            } else if (currentUsername) {
+                generateWorkoutWithAI();
+            }
         }
 
         function calculateAge(dobString) {
             if (!dobString) return '-';
             const dob = new Date(dobString);
             const diff = Date.now() - dob.getTime();
-            const ageDate = new Date(diff);
-            return Math.abs(ageDate.getUTCFullYear() - 1970);
+            return Math.abs(new Date(diff).getUTCFullYear() - 1970);
         }
 
         function calculateNetWeight() {
             let gross = parseFloat(document.getElementById('input-gross-weight').value) || 0;
             let deduction = 0;
-            document.querySelectorAll('.cloth-check:checked').forEach(cb => {
-                deduction += parseFloat(cb.value);
-            });
+            document.querySelectorAll('.cloth-check:checked').forEach(cb => deduction += parseFloat(cb.value));
             let net = Math.max(0, gross - deduction);
             document.getElementById('net-weight-display').innerText = net.toFixed(1) + " Kg";
             return net.toFixed(1);
@@ -751,10 +783,7 @@ const baseExercises = [
 
         function saveProfile() {
             let user = document.getElementById('input-username').value.trim().toLowerCase();
-            if (!user) {
-                alert("Il Nome Utente ID è obbligatorio!");
-                return;
-            }
+            if (!user) return alert("Il Nome Utente ID è obbligatorio!");
 
             currentUsername = user;
             localStorage.setItem('fm_user', currentUsername);
@@ -773,6 +802,7 @@ const baseExercises = [
             saveToCloud();
             closeModal('profile-modal');
             showDashboardUI();
+            generateWorkoutWithAI(); // Rigenera la scheda adattandosi ai nuovi parametri mentali/fisici
         }
 
         function openProfileModal() {
@@ -795,65 +825,29 @@ const baseExercises = [
 
             document.getElementById('tab-' + tabName).classList.add('active');
             let btn = document.getElementById('nav-' + tabName);
-            if (tabName === 'meditation') {
-                btn.classList.add('active-meditation');
-            } else {
-                btn.classList.add('active');
-            }
+            btn.classList.add(tabName === 'meditation' ? 'active-meditation' : 'active');
         }
 
         function completeWorkout() {
             document.getElementById('feedback-card').style.display = 'block';
         }
 
-        function adjustDifficulty(delta) {
-            let mult = appData.levelMultiplier || 1.0;
-            if (delta === -1) mult = Math.max(0.5, mult - 0.1);
-            else if (delta === 1) mult = Math.min(2.5, mult + 0.1);
-
-            appData.levelMultiplier = mult;
+        function saveFeedbackAndAdjust(feedback) {
+            appData.lastFeedback = feedback;
             appData.totalWorkouts = (appData.totalWorkouts || 0) + 1;
             saveToCloud();
 
             document.getElementById('feedback-card').style.display = 'none';
-            alert("Allenamento salvato! Moltiplicatore aggiornato a x" + mult.toFixed(1));
+            alert(`Sessione registrata! Feedback: "${feedback}". L'IA ne terrà conto la prossima volta.`);
         }
 
-        // --- INTEGRAZIONE CLOUD RUN / GEMINI ---
-        async function fetchGeminiPrompt() {
-            const outputEl = document.getElementById('ai-motivation-text');
-            outputEl.innerText = "Generazione in corso da Gemini...";
-
-            const customPrompt = `Crea una frase breve e molto motivante per l'allenamento basata su un utente con stato d'animo "${appData.mood || 'Carico'}" e livello energia "${appData.energy || 'Medio'}".`;
-
-            try {
-                const res = await fetch(GEMINI_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: customPrompt })
-                });
-
-                if (!res.ok) throw new Error("Errore chiamata HTTP: " + res.status);
-
-                const data = await res.json();
-                outputEl.innerText = `"${data.text || data.response || 'Nessuna risposta dal server'}"`;
-            } catch (err) {
-                console.error("Errore Gemini Cloud Run:", err);
-                outputEl.innerText = "Impossibile contattare la Cloud Function. Controlla la console del browser.";
-            }
-        }
-
-        // --- GESTIONE MEDITAZIONE E AUDIO ---
+        // --- GESTIONE MEDITAZIONE ---
         let meditationTimerId = null;
         let meditationSeconds = 300;
         let isMeditating = false;
 
         function toggleMeditation() {
-            if (isMeditating) {
-                pauseMeditation();
-            } else {
-                startMeditation();
-            }
+            isMeditating ? pauseMeditation() : startMeditation();
         }
 
         function startMeditation() {
@@ -917,7 +911,6 @@ const baseExercises = [
             }
         }
 
-        // Inizializzazione all'avvio della pagina
         window.onload = initApp;
     </script>
 </body>
