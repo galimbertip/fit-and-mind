@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v3.0.2 - Adaptive & Infinite AI Workout Engine -->
+    <!-- Fit & Mind v3.0.3 - Adaptive & Infinite AI Workout Engine -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind v3.0.2</title>
+    <title>Fit & Mind v3.0.3</title>
     <meta name="theme-color" content="#121212">
     
     <link rel="icon" type="image/png" sizes="192x192" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
@@ -155,7 +155,7 @@
 
     <header>
         <div>
-            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v3.0.2</span></h1>
+            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v3.0.3</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div class="header-actions">
@@ -175,7 +175,7 @@
         <!-- BENVENUTO -->
         <div id="welcome-screen" class="card" style="text-align: center; padding: 30px 10px;">
             <img src="https://cdn-icons-png.flaticon.com/512/2964/2964514.png" alt="Logo" style="width: 80px; margin-bottom: 15px;">
-            <h2 style="margin-bottom: 5px;">Benvenuto in Fit & Mind v3.0.2</h2>
+            <h2 style="margin-bottom: 5px;">Benvenuto in Fit & Mind v3.0.3</h2>
             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 25px;">Adaptive Personal Training & Mind Care</p>
             <button class="btn" style="margin-bottom: 12px;" onclick="openLoginModal()">Accedi al tuo Profilo</button>
             <button class="btn btn-meditation" onclick="openRegisterModal()">Crea Nuovo Profilo</button>
@@ -327,12 +327,20 @@
                 <button onclick="closeModal('changelog-modal')" style="background:none; border:none; color:#aaa; font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
+            <!-- v3.0.3 -->
+            <div class="changelog-version">
+                <span class="version-tag">v3.0.3</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-patch">PATCH</span> Error Handling: Integrata la gestione difensiva sugli errori HTTP 500 restituiti dal backend Cloud Run.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Security Warning: Prompt per la rigenerazione e messa in sicurezza delle credenziali API Key su Cloud Run.</li>
+                </ul>
+            </div>
+
             <!-- v3.0.2 -->
             <div class="changelog-version">
-                <span class="version-tag">v3.0.2</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <span class="version-tag">v3.0.2</span>
                 <ul class="changelog-list">
-                    <li><span class="badge-type badge-patch">PATCH</span> Bugfix: Risolto un errore di sintassi JS nell'invocazione dell'API AI che bloccava il caricamento dell'interfaccia e dei pulsanti.</li>
-                    <li><span class="badge-type badge-patch">PATCH</span> Resilience: Aggiunto controllo preventivo `res.ok` per catturare risposte HTTP 500 dal server Cloud Run evitando il crash del JSON parser.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Bugfix Syntax: Risolto il blocco delle funzioni e dei pulsanti JS causato da un `await` errato nello script client.</li>
                 </ul>
             </div>
 
@@ -379,7 +387,7 @@
     <audio id="meditation-audio" loop preload="auto" src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=meditation-relaxing-112191.mp3"></audio>
 
     <footer>
-        Fit & Mind v3.0.2 - Infinite Adaptive AI Engine<br>
+        Fit & Mind v3.0.3 - Infinite Adaptive AI Engine<br>
         <span onclick="openChangelogModal()">Visualizza Changelog Completo</span>
     </footer>
 
