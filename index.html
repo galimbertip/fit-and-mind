@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fit & Mind - Allenamento & Meditazione</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --accent: #ff6b6b;
+            --accent-meditation: #4ecdc4;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        h1 { margin: 0; font-size: 1.5rem; color: var(--accent); }
+        .subtitle { font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px; }
+
+        nav {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            background-color: #1a1a1a;
+        }
+
+        nav button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        nav button.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent);
+        }
+
+        nav button.active-meditation {
+            border-bottom-color: var(--accent-meditation);
+        }
+
+        main {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            box-sizing: border-box;
+            flex: 1;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .card h2 { margin-top: 0; font-size: 1.2rem; }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-meditation { background-color: var(--accent-meditation); }
+        .btn-secondary { background-color: #333; color: #fff; }
+
+        .exercise-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .exercise-item:last-child { border-bottom: none; }
+
+        .timer-display {
+            font-size: 3rem;
+            text-align: center;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--accent-meditation);
+        }
+
+        .feedback-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .feedback-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #444;
+            background-color: #252525;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .sync-status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .sync-online { background-color: #2e7d32; color: #fff; }
+        .sync-offline { background-color: #c62828; color: #fff; }
+    </style>
+
+    <!-- Firebase Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>FIT & MIND</h1>
+        <div class="subtitle">Progressione Smart & Meditazione</div>
+        <div id="sync-badge" class="sync-status-badge sync-offline">Connessione in corso...</div>
+    </header>
+
+    <nav>
+        <button id="nav-workout" class="active" onclick="switchTab('workout')">Allenamento</button>
+        <button id="nav-meditation" onclick="switchTab('meditation')">Meditazione</button>
+        <button id="nav-stats" onclick="switchTab('stats')">Progressi</button>
+    </nav>
+
+    <main>
+        <!-- TAB ALLENAMENTO -->
+        <div id="tab-workout" class="tab-content active">
+            <div class="card">
+                <h2>1. Riscaldamento (3-4 min)</h2>
+                <div class="exercise-item"><span>Rotazioni collo & spalle</span><span>30 sec cad.</span></div>
+                <div class="exercise-item"><span>Torsioni busto & anche</span><span>30 sec cad.</span></div>
+                <div class="exercise-item"><span>Marcia a ginocchia alte</span><span>60 sec</span></div>
+            </div>
+
+            <div class="card">
+                <h2>2. Circuito Principale (<span id="current-level-display">Intensità x1.0</span>)</h2>
+                <p style="font-size: 0.85rem; color: #aaa;">Esegui 2-3 giri. Riposo 60 sec tra un giro e l'altro.</p>
+                <div id="workout-list"></div>
+                <button class="btn" onclick="completeWorkout()">Ho completato l'Allenamento!</button>
+            </div>
+
+            <div id="feedback-card" class="card" style="display: none;">
+                <h2>Com'è andata la sessione?</h2>
+                <p style="font-size: 0.85rem; color: #aaa;">In base a cosa rispondi, l'app adatterà le ripetizioni per la prossima volta.</p>
+                <div class="feedback-options">
+                    <button class="feedback-btn" onclick="adjustDifficulty(-1)">Troppo Duro</button>
+                    <button class="feedback-btn" onclick="adjustDifficulty(0)">Giusto</button>
+                    <button class="feedback-btn" onclick="adjustDifficulty(1)">Troppo Facile</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB MEDITAZIONE -->
+        <div id="tab-meditation" class="tab-content">
+            <div class="card">
+                <h2>Meditazione e Rilassamento</h2>
+                <p style="font-size: 0.9rem; color: #aaa;">Concentrati sul respiro e stacca la spina. Può essere fatta post-workout o durante la giornata.</p>
+                
+                <div class="timer-display" id="meditation-timer">05:00</div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-meditation" id="btn-start-meditation" onclick="toggleMeditation()">Avvia Meditazione</button>
+                    <button class="btn btn-secondary" onclick="resetMeditation()">Reset</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB STATISTICHE -->
+        <div id="tab-stats" class="tab-content">
+            <div class="card">
+                <h2>I tuoi Progressi Sincronizzati</h2>
+                <div class="exercise-item"><span>Allenamenti completati:</span><strong id="total-workouts">0</strong></div>
+                <div class="exercise-item"><span>Sessioni meditazione:</span><strong id="total-meditations">0</strong></div>
+                <div class="exercise-item"><span>Moltiplicatore attuale:</span><strong id="stat-multiplier">x1.0</strong></div>
+                <div class="exercise-item"><span>Ultima sincronizzazione:</span><strong id="last-sync-time">Mai</strong></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Configurazione Firebase integrata
+        const firebaseConfig = {
+            apiKey: "AIzaSyDviQAQZ8FNfJsJz-Z-azgCR73l4CqThTs",
+            authDomain: "fit-and-mind.firebaseapp.com",
+            databaseURL: "https://fit-and-mind-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "fit-and-mind",
+            storageBucket: "fit-and-mind.firebasestorage.app",
+            messagingSenderId: "591471755393",
+            appId: "1:591471755393:web:b234ea3068fd57d319cd80",
+            measurementId: "G-2898FX742E"
+        };
+
+        // Inizializzazione Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const userRef = db.ref('user_profile/paolo');
+
+        let appData = {
+            levelMultiplier: 1.0,
+            totalWorkouts: 0,
+            totalMeditations: 0,
+            lastUpdated: "-"
+        };
+
+        let meditationInterval = null;
+        let meditationSeconds = 300;
+        let isMeditating = false;
+
+        const baseExercises = [
+            { name: "Piegamenti facilitati (ginocchia)", baseRep: 10, unit: "rep" },
+            { name: "Squat a corpo libero", baseRep: 12, unit: "rep" },
+            { name: "Plank isometrico", baseRep: 25, unit: "sec" },
+            { name: "Crunch Addominali", baseRep: 15, unit: "rep" },
+            { name: "Affondi posteriori alternati", baseRep: 10, unit: "rep/gamba" }
+        ];
+
+        // Sincronizzazione Realtime
+        userRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                appData = data;
+                updateBadge("Sincronizzato Cloud", true);
+            } else {
+                saveToCloud();
+            }
+            renderWorkout();
+            updateStatsUI();
+        }, (error) => {
+            console.error("Errore Firebase:", error);
+            updateBadge("Errore Connessione", false);
+        });
+
+        function saveToCloud() {
+            appData.lastUpdated = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            userRef.set(appData)
+                .then(() => updateBadge("Sincronizzato Cloud", true))
+                .catch(() => updateBadge("Errore Salvataggio", false));
+        }
+
+        function updateBadge(text, isOnline) {
+            const badge = document.getElementById('sync-badge');
+            badge.innerText = text;
+            badge.className = "sync-status-badge " + (isOnline ? "sync-online" : "sync-offline");
+        }
+
+        function renderWorkout() {
+            const list = document.getElementById('workout-list');
+            list.innerHTML = '';
+            
+            let mult = appData.levelMultiplier || 1.0;
+            document.getElementById('current-level-display').innerText = "Intensità x" + mult.toFixed(1);
+
+            baseExercises.forEach(ex => {
+                let target = Math.round(ex.baseRep * mult);
+                let div = document.createElement('div');
+                div.className = 'exercise-item';
+                div.innerHTML = `<span>${ex.name}</span><strong>${target} ${ex.unit}</strong>`;
+                list.appendChild(div);
+            });
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(el => {
+                el.classList.remove('active');
+                el.classList.remove('active-meditation');
+            });
+
+            document.getElementById('tab-' + tab).classList.add('active');
+            let btn = document.getElementById('nav-' + tab);
+            
+            if (tab === 'meditation') {
+                btn.classList.add('active-meditation');
+            } else {
+                btn.classList.add('active');
+            }
+        }
+
+        function completeWorkout() {
+            document.getElementById('feedback-card').style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function adjustDifficulty(change) {
+            if (!appData.levelMultiplier) appData.levelMultiplier = 1.0;
+            
+            if (change === 1) appData.levelMultiplier += 0.1;
+            if (change === -1 && appData.levelMultiplier > 0.6) appData.levelMultiplier -= 0.1;
+            
+            appData.totalWorkouts = (appData.totalWorkouts || 0) + 1;
+            saveToCloud();
+            
+            document.getElementById('feedback-card').style.display = 'none';
+            renderWorkout();
+            updateStatsUI();
+        }
+
+        // TIMER MEDITAZIONE
+        function toggleMeditation() {
+            let btn = document.getElementById('btn-start-meditation');
+            if (isMeditating) {
+                clearInterval(meditationInterval);
+                isMeditating = false;
+                btn.innerText = "Riprendi Meditazione";
+            } else {
+                isMeditating = true;
+                btn.innerText = "Pausa";
+                meditationInterval = setInterval(() => {
+                    meditationSeconds--;
+                    updateMeditationDisplay();
+                    if (meditationSeconds <= 0) {
+                        clearInterval(meditationInterval);
+                        isMeditating = false;
+                        appData.totalMeditations = (appData.totalMeditations || 0) + 1;
+                        saveToCloud();
+                        alert("Sessione di meditazione completata!");
+                        resetMeditation();
+                        updateStatsUI();
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetMeditation() {
+            clearInterval(meditationInterval);
+            isMeditating = false;
+            meditationSeconds = 300;
+            document.getElementById('btn-start-meditation').innerText = "Avvia Meditazione";
+            updateMeditationDisplay();
+        }
+
+        function updateMeditationDisplay() {
+            let m = Math.floor(meditationSeconds / 60);
+            let s = meditationSeconds % 60;
+            document.getElementById('meditation-timer').innerText = 
+                `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function updateStatsUI() {
+            document.getElementById('total-workouts').innerText = appData.totalWorkouts || 0;
+            document.getElementById('total-meditations').innerText = appData.totalMeditations || 0;
+            document.getElementById('stat-multiplier').innerText = "x" + (appData.levelMultiplier || 1.0).toFixed(1);
+            document.getElementById('last-sync-time').innerText = appData.lastUpdated || "-";
+        }
+    </script>
+</body>
+</html>
