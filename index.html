@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v5.0.0 - Corpo & Spirito in equilibrio -->
+    <!-- Fit & Mind v5.1.0 - Corpo & Spirito in equilibrio -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind v5.0.0</title>
+    <title>Fit & Mind v5.1.0</title>
     <meta name="theme-color" content="#121212">
     <meta name="description" content="Allenamento a corpo libero adattivo e meditazione guidata quotidiana, per far crescere corpo e spirito in equilibrio.">
 
@@ -78,6 +78,8 @@
         }
         .btn-meditation { background-color: var(--accent-meditation); color: #121212; }
         .btn-secondary { background-color: #333; color: #fff; }
+        .btn-danger { background-color: transparent; color: #e05a5a; border: 1px solid #7a2e2e; }
+        .btn-danger:hover { background-color: #2a1414; }
 
         .section-title {
             font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;
@@ -196,7 +198,7 @@
 
     <header>
         <div>
-            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v5.0.0</span></h1>
+            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v5.1.0</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div class="header-actions">
@@ -371,6 +373,14 @@
                     Fai una sessione di meditazione con check-in umore per iniziare a vedere il tuo andamento.
                 </p>
             </div>
+
+            <div class="card">
+                <h2>⚙️ Gestione Account</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 10px 0; line-height: 1.4;">
+                    Elimina definitivamente questo profilo e tutti i dati associati (livelli, allenamenti, meditazioni, streak) da questo dispositivo e dal cloud. Utile ad esempio se il profilo è stato creato prima dell'intervista attuale e vuoi ripartire da zero con la nuova intervista Corpo & Spirito.
+                </p>
+                <button class="btn btn-danger" onclick="deleteProfile()">🗑️ Elimina questo Profilo</button>
+            </div>
         </div>
     </main>
 
@@ -537,9 +547,17 @@
                 <button onclick="closeModal('changelog-modal')" style="background:none; border:none; color:#aaa; font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
+            <!-- v5.1.0 -->
+            <div class="changelog-version">
+                <span class="version-tag">v5.1.0</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-minor">MINOR</span> Gestione Account: nel tab Profilo è ora possibile eliminare definitivamente il profilo corrente (locale + cloud) — utile soprattutto per chi aveva creato il profilo prima dell'intervista Corpo & Spirito e vuole ripartire da capo con un'intervista completa.</li>
+                </ul>
+            </div>
+
             <!-- v5.0.0 -->
             <div class="changelog-version">
-                <span class="version-tag">v5.0.0</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <span class="version-tag">v5.0.0</span>
                 <ul class="changelog-list">
                     <li><span class="badge-type badge-major">MAJOR</span> Scopo dichiarato dell'app — Corpo & Spirito in equilibrio: l'intervista di creazione profilo è ora un percorso in 4 passi che esplora sia lo stato fisico che quello interiore (esperienza di meditazione, livello di stress, autoconsapevolezza), per far partire ognuno dal punto giusto in entrambe le aree.</li>
                     <li><span class="badge-type badge-major">MAJOR</span> Nuovo motore "Mente": un Livello Mente (1-6) parallelo al Livello Fitness, che cresce con la pratica costante e con il feedback dato dopo ogni sessione di meditazione ("Troppo Intensa" / "Giusta" / "Vorrei di Più").</li>
@@ -633,7 +651,7 @@
     </div>
 
     <footer>
-        Fit & Mind v5.0.0 - Corpo & Spirito in equilibrio<br>
+        Fit & Mind v5.1.0 - Corpo & Spirito in equilibrio<br>
         <span onclick="openChangelogModal()">Visualizza Changelog Completo</span>
     </footer>
 

@@ -187,6 +187,32 @@ function logout() {
     location.reload();
 }
 
+// Elimina definitivamente il profilo corrente (locale + cloud). Pensata soprattutto
+// per chi ha un profilo creato prima dell'intervista Corpo & Spirito e vuole
+// rifarla da capo con un profilo pulito, invece di restare con dati incompleti.
+function deleteProfile() {
+    const username = currentUsername;
+    if (!username) return;
+
+    const ok = confirm(
+        'Eliminare definitivamente il profilo "' + username + '"?\n\n' +
+        'Tutti i progressi salvati (livelli, allenamenti, meditazioni, streak) verranno cancellati sia da questo dispositivo che dal cloud. L\'azione non è reversibile.'
+    );
+    if (!ok) return;
+
+    if (userRef) {
+        try { userRef.off(); } catch (e) {}
+        try {
+            userRef.remove().catch((err) => console.warn('Rimozione dal cloud non riuscita, il profilo resta comunque eliminato in locale:', err));
+        } catch (e) {}
+    }
+
+    try { localStorage.removeItem(localKey(username)); } catch (e) {}
+    localStorage.removeItem('fm_user');
+
+    location.reload();
+}
+
 // --- SCHERMATE / NAVIGAZIONE -------------------------------------------------
 
 function showWelcomeUI() {
