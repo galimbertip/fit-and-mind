@@ -351,19 +351,73 @@ function closeModal(id) {
     document.getElementById(id).style.display = 'none';
 }
 
-function executeLogin() {
-    const input = document.getElementById('login-username-input').value.trim().toLowerCase();
-    if (!input) return alert("Inserisci un ID valido");
-    currentUsername = input;
+// Porta a termine un login per cui sappiamo che il profilo esiste davvero
+// (trovato in locale, oppure confermato sul cloud).
+function completeLogin(username, existingData) {
+    currentUsername = username;
     localStorage.setItem('fm_user', currentUsername);
     closeModal('login-modal');
 
-    const local = loadLocal(currentUsername);
-    appData = normalizeAppData(Object.assign(defaultAppData(currentUsername), local || {}));
+    appData = normalizeAppData(Object.assign(defaultAppData(currentUsername), existingData || {}));
     showDashboardUI();
     ensureTodayWorkout();
     renderAllUI();
     attachFirebaseListener(currentUsername);
+}
+
+// "Accedi al tuo Profilo" deve riportare indietro un profilo esistente, non aprirne
+// silenziosamente uno vuoto con lo stesso nome: altrimenti un profilo eliminato (o
+// digitato per errore) sembra "esistere ancora" solo perché la dashboard si apre lo
+// stesso. Se i dati non sono già in locale su questo dispositivo, verifichiamo prima
+// sul cloud che il profilo esista davvero, prima di entrare.
+function executeLogin() {
+    const input = document.getElementById('login-username-input').value.trim().toLowerCase();
+    if (!input) return alert("Inserisci un ID valido");
+
+    const local = loadLocal(input);
+    if (local) {
+        completeLogin(input, local);
+        return;
+    }
+
+    const loginBtn = document.getElementById('btn-execute-login');
+    const resetBtn = () => { if (loginBtn) { loginBtn.disabled = false; loginBtn.innerText = 'Accedi'; } };
+    if (loginBtn) { loginBtn.disabled = true; loginBtn.innerText = 'Verifica in corso...'; }
+
+    if (!db) {
+        resetBtn();
+        alert('Nessun dato locale trovato per "' + input + '" e il cloud non è raggiungibile in questo momento.\n\nSe il profilo esiste solo su un altro dispositivo, riprova quando sei online. Se invece è la prima volta, usa "Crea Nuovo Profilo".');
+        return;
+    }
+
+    let settled = false;
+    db.ref('user_profile/' + input).once('value')
+        .then((snapshot) => {
+            if (settled) return;
+            settled = true;
+            resetBtn();
+            const cloudData = snapshot.val();
+            if (!cloudData) {
+                alert('Nessun profilo trovato con il nome "' + input + '".\n\nSe è la prima volta, usa "Crea Nuovo Profilo" per fare l\'intervista Corpo & Spirito.');
+                return;
+            }
+            completeLogin(input, cloudData);
+        })
+        .catch((err) => {
+            if (settled) return;
+            settled = true;
+            resetBtn();
+            console.warn('Verifica profilo sul cloud non riuscita:', err);
+            alert('Non riesco a verificare il profilo in questo momento (problema di rete). Riprova tra poco.');
+        });
+
+    // Rete assente o troppo lenta: non lasciamo il pulsante bloccato per sempre.
+    setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        resetBtn();
+        alert('La verifica sta impiegando troppo tempo (rete lenta o assente). Riprova quando la connessione è più stabile.');
+    }, 6000);
 }
 
 function saveProfile() {

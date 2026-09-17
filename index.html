@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v5.1.1 - Corpo & Spirito in equilibrio -->
+    <!-- Fit & Mind v5.1.2 - Corpo & Spirito in equilibrio -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind v5.1.1</title>
+    <title>Fit & Mind v5.1.2</title>
     <meta name="theme-color" content="#121212">
     <meta name="description" content="Allenamento a corpo libero adattivo e meditazione guidata quotidiana, per far crescere corpo e spirito in equilibrio.">
 
@@ -198,7 +198,7 @@
 
     <header>
         <div>
-            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v5.1.1</span></h1>
+            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v5.1.2</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div class="header-actions">
@@ -392,7 +392,7 @@
                 <label>ID Utente:</label>
                 <input type="text" id="login-username-input" placeholder="es. paolo">
             </div>
-            <button class="btn" onclick="executeLogin()">Accedi</button>
+            <button class="btn" id="btn-execute-login" onclick="executeLogin()">Accedi</button>
             <button class="btn btn-secondary" style="margin-top: 8px;" onclick="closeModal('login-modal')">Annulla</button>
         </div>
     </div>
@@ -547,9 +547,17 @@
                 <button onclick="closeModal('changelog-modal')" style="background:none; border:none; color:#aaa; font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
+            <!-- v5.1.2 -->
+            <div class="changelog-version">
+                <span class="version-tag">v5.1.2</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-patch">PATCH</span> Corretto "Accedi al tuo Profilo": prima apriva sempre una dashboard (vuota, se il profilo non esisteva più) qualunque nome si digitasse, dando l'impressione che un profilo eliminato fosse "ancora lì". Ora, se non ci sono dati sul dispositivo, verifica prima sul cloud che il profilo esista davvero: se non lo trova, avvisa chiaramente invece di aprire un profilo vuoto.</li>
+                </ul>
+            </div>
+
             <!-- v5.1.1 -->
             <div class="changelog-version">
-                <span class="version-tag">v5.1.1</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <span class="version-tag">v5.1.1</span>
                 <ul class="changelog-list">
                     <li><span class="badge-type badge-patch">PATCH</span> Corretta l'eliminazione profilo: la pagina si ricaricava prima che la richiesta di cancellazione dal cloud fosse completata, così i dati a volte "ricomparivano" rientrando con lo stesso nome utente. Ora l'eliminazione aspetta la conferma dal cloud (o un breve timeout di sicurezza se offline) prima di tornare alla schermata di benvenuto.</li>
                 </ul>
@@ -659,7 +667,7 @@
     </div>
 
     <footer>
-        Fit & Mind v5.1.1 - Corpo & Spirito in equilibrio<br>
+        Fit & Mind v5.1.2 - Corpo & Spirito in equilibrio<br>
         <span onclick="openChangelogModal()">Visualizza Changelog Completo</span>
     </footer>
 
