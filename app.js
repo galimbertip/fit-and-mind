@@ -190,6 +190,12 @@ function logout() {
 // Elimina definitivamente il profilo corrente (locale + cloud). Pensata soprattutto
 // per chi ha un profilo creato prima dell'intervista Corpo & Spirito e vuole
 // rifarla da capo con un profilo pulito, invece di restare con dati incompleti.
+//
+// IMPORTANTE: la rimozione da Firebase è asincrona. Se ricaricassimo la pagina subito
+// dopo averla richiesta, il reload interromperebbe la richiesta di rete a metà e i dati
+// resterebbero nel cloud — così al login successivo Firebase li "ripesca" e il profilo
+// sembra tornato in vita. Per questo aspettiamo la conferma della rimozione (o un
+// timeout di sicurezza se il cloud non risponde) prima di ricaricare.
 function deleteProfile() {
     const username = currentUsername;
     if (!username) return;
@@ -200,17 +206,31 @@ function deleteProfile() {
     );
     if (!ok) return;
 
-    if (userRef) {
-        try { userRef.off(); } catch (e) {}
-        try {
-            userRef.remove().catch((err) => console.warn('Rimozione dal cloud non riuscita, il profilo resta comunque eliminato in locale:', err));
-        } catch (e) {}
+    const btn = document.getElementById('btn-delete-profile');
+    if (btn) { btn.disabled = true; btn.innerText = 'Eliminazione in corso...'; }
+
+    const ref = userRef || (db ? db.ref('user_profile/' + username) : null);
+    if (ref) { try { ref.off(); } catch (e) {} }
+
+    let finished = false;
+    const finishDeletion = () => {
+        if (finished) return;
+        finished = true;
+        try { localStorage.removeItem(localKey(username)); } catch (e) {}
+        localStorage.removeItem('fm_user');
+        location.reload();
+    };
+
+    if (ref) {
+        ref.remove().then(finishDeletion).catch((err) => {
+            console.warn('Rimozione dal cloud non riuscita, elimino comunque i dati locali:', err);
+            finishDeletion();
+        });
+        // Rete assente o troppo lenta: non blocchiamo l'utente all'infinito.
+        setTimeout(finishDeletion, 4000);
+    } else {
+        finishDeletion();
     }
-
-    try { localStorage.removeItem(localKey(username)); } catch (e) {}
-    localStorage.removeItem('fm_user');
-
-    location.reload();
 }
 
 // --- SCHERMATE / NAVIGAZIONE -------------------------------------------------
