@@ -4,7 +4,7 @@
 // (Firebase, CDN): quelle passano dritte in rete, altrimenti la sync smetterebbe
 // di funzionare.
 
-const CACHE_VERSION = 'fit-and-mind-v5.1.2';
+const CACHE_VERSION = 'fit-and-mind-v5.2.0';
 const APP_SHELL = [
     './',
     './index.html',
