@@ -1456,3 +1456,5 @@ var SYNTH_PRESETS = [
 ];
 
 export { AmbientlyEngine, HIT_NAMES, SYNTH_PRESETS, createHits, createSynth, fillNoise, noiseBuffer };
+//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.js.map

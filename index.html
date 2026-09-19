@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v6.0.0 - Corpo & Spirito in equilibrio -->
+    <!-- Fit & Mind v6.0.1 - Corpo & Spirito in equilibrio -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind v6.0.0</title>
+    <title>Fit & Mind v6.0.1</title>
     <meta name="theme-color" content="#121212">
     <meta name="description" content="Allenamento a corpo libero adattivo e meditazione guidata quotidiana, per far crescere corpo e spirito in equilibrio.">
 
@@ -430,7 +430,7 @@
 
     <header>
         <div>
-            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v6.0.0</span></h1>
+            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v6.0.1</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div class="header-actions">
@@ -818,9 +818,17 @@
                 <button onclick="closeModal('changelog-modal')" style="background:none; border:none; color:#aaa; font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
+            <!-- v6.0.1 -->
+            <div class="changelog-version">
+                <span class="version-tag">v6.0.1</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-patch">PATCH</span> Corretto il bug per cui, dopo un aggiornamento, l'app poteva mostrare il nuovo numero di versione ma continuare a eseguire il vecchio codice sotto (allenamento guidato che non partiva, icone esercizi assenti, voce e suoni di sottofondo invariati) — colpa della cache del browser che teneva una copia vecchia di app.js anche quando il service worker credeva di scaricarne una fresca. Ora l'aggiornamento forza sempre una copia nuova dalla rete. Se l'app ti risultava già bloccata su una versione "a metà", va cancellata la cache del sito una volta (vedi istruzioni fornite) perché il fix si applichi.</li>
+                </ul>
+            </div>
+
             <!-- v6.0.0 -->
             <div class="changelog-version">
-                <span class="version-tag">v6.0.0</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <span class="version-tag">v6.0.0</span>
                 <ul class="changelog-list">
                     <li><span class="badge-type badge-major">MAJOR</span> Nuovo "▶️ Avvia Allenamento Guidato": accompagna la scheda del giorno esercizio per esercizio, con countdown automatico per quelli a tempo, pulsante "Fatto" per quelli a ripetizioni, e un riposo cronometrato tra un esercizio e il successivo (30 secondi di default, estendibile di +15 secondi quante volte si vuole, o saltabile). Un breve segnale sonoro avvisa quando il tempo scade. La scheda "classica" resta comunque disponibile per chi preferisce allenarsi a modo suo.</li>
                     <li><span class="badge-type badge-major">MAJOR</span> Illustrazioni per ogni esercizio: un set di semplici disegni "omino stilizzato" (originali, disegnati per l'app — nessuna foto esterna, quindi nessun problema di diritti d'autore) accanto al nome di ciascun esercizio, sia nella scheda che nell'Allenamento Guidato.</li>
@@ -959,7 +967,7 @@
     </div>
 
     <footer>
-        Fit & Mind v6.0.0 - Corpo & Spirito in equilibrio<br>
+        Fit & Mind v6.0.1 - Corpo & Spirito in equilibrio<br>
         <span onclick="openChangelogModal()">Visualizza Changelog Completo</span>
     </footer>
 
