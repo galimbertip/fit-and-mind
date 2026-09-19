@@ -31,8 +31,9 @@ let currentMeditationGoal = 'relax';
 let currentMeditationMode = 'guidata'; // 'guidata' | 'libera'
 let meditationCues = [];
 let meditationSpokenCueSeconds = {};
-let ambientAudioCtx = null;
-let ambientNodes = null;
+let ambientEngine = null;
+let hitsCtx = null;
+let hitsEngine = null;
 
 // --- DATI: default, storage locale, normalizzazione -----------------------
 
@@ -513,6 +514,24 @@ function regenerateWorkout() {
     renderStatsUI();
 }
 
+// Mappa esercizio -> posa illustrata (vedi <defs> in index.html). Sono illustrazioni
+// semplici e riutilizzate tra esercizi con posizione del corpo simile: non un disegno
+// diverso per ognuno dei ~50 esercizi, ma un set di pose di base facilmente riconoscibili.
+const EXERCISE_POSE_MAP = {
+    w1: 'standing-arms-out', w2: 'standing-hip-hands', w3: 'marching', w4: 'lunge', w5: 'cat-cow', w6: 'squat', w7: 'jumping-jack', w8: 'torso-twist',
+    c1: 'standing-quad-stretch', c2: 'standing-hamstring-stretch', c3: 'childs-pose', c4: 'side-bend', c5: 'lying-breathing',
+    k1: 'plank', k2: 'plank', k3: 'crunch', k4: 'leg-raise', k5: 'crunch', k6: 'seated-twist', k7: 'side-plank', k8: 'plank',
+    k9: 'dead-bug', k10: 'superman', k11: 'plank', k12: 'v-up', k13: 'hollow-hold', k14: 'torso-twist',
+    k15: 'l-sit', k16: 'l-sit', k17: 'l-sit', k18: 'dragon-flag',
+    s1: 'squat', s2: 'lunge', s3: 'jumping-jack', s4: 'push-up', s5: 'push-up', s6: 'glute-bridge', s7: 'marching', s8: 'wall-sit',
+    s9: 'burpee', s10: 'plank', s11: 'squat', s12: 'burpee', s13: 'lunge', s14: 'lunge', s15: 'pike-push-up',
+    s16: 'pistol-squat', s17: 'pistol-squat', s18: 'pistol-squat', s19: 'push-up', s20: 'wall-walk'
+};
+
+function poseIdForExercise(exId) {
+    return EXERCISE_POSE_MAP[exId] || 'standing-arms-out';
+}
+
 function renderExerciseList(items, targetId) {
     const container = document.getElementById(targetId);
     container.innerHTML = '';
@@ -520,11 +539,14 @@ function renderExerciseList(items, targetId) {
         const div = document.createElement('div');
         div.className = 'exercise-item';
         div.innerHTML =
-            '<div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">' +
-                '<strong style="color: var(--text-primary); font-size: 1rem;"></strong>' +
-                '<span style="color: var(--accent-meditation); font-weight: bold;"></span>' +
+            '<div class="ex-row">' +
+                '<svg class="ex-icon" viewBox="0 0 100 100"><use href="#pose-' + poseIdForExercise(ex.id) + '"></use></svg>' +
+                '<div style="flex:1; min-width:0; display: flex; justify-content: space-between; align-items: center;">' +
+                    '<strong style="color: var(--text-primary); font-size: 1rem;"></strong>' +
+                    '<span style="color: var(--accent-meditation); font-weight: bold; white-space: nowrap; margin-left: 8px;"></span>' +
+                '</div>' +
             '</div>' +
-            '<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.3;"></div>';
+            '<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px; line-height: 1.3; padding-left: 44px;"></div>';
         div.querySelector('strong').textContent = ex.name;
         div.querySelector('span').textContent = (ex.sets ? (ex.sets + ' x ') : '') + ex.qty + ' ' + ex.unit;
         div.lastElementChild.textContent = ex.desc || '';
@@ -549,6 +571,186 @@ function renderWorkoutScheme(scheme) {
 
 function completeWorkout() {
     document.getElementById('feedback-card').style.display = 'block';
+}
+
+// --- ALLENAMENTO GUIDATO ------------------------------------------------------
+// Accompagna la scheda del giorno esercizio per esercizio: countdown automatico per
+// quelli a tempo ("sec"), pulsante "Fatto" per quelli a ripetizioni, e un riposo
+// cronometrato tra un esercizio e il successivo (default 30s, estendibile di +15s
+// quante volte si vuole, o saltabile). Il blocco Core rispetta le "serie" già
+// calcolate da formatCoreEx, il blocco Circuito si ripete per il numero di "giri"
+// della scheda. Gli esercizi "sec/lato" (es. Plank Laterale) vengono proposti come
+// due passaggi separati (un lato, un breve cambio, l'altro lato).
+const GUIDED_DEFAULT_REST_SECONDS = 30;
+let guidedSteps = [];
+let guidedIndex = 0;
+let guidedTimerId = null;
+let guidedSecondsLeft = 0;
+let guidedPaused = false;
+
+function buildGuidedSteps(scheme, restSeconds) {
+    const steps = [];
+    let first = true;
+    const maybeRest = () => {
+        if (!first) steps.push({ type: 'rest', seconds: restSeconds });
+        first = false;
+    };
+    const pushExercise = (ex, extra) => {
+        const timed = !!(ex.unit && ex.unit.indexOf('sec') > -1);
+        steps.push(Object.assign({ type: 'exercise', ex: ex, timed: timed }, extra || {}));
+    };
+    const addExercise = (ex, extra) => {
+        if (ex.unit === 'sec/lato') {
+            maybeRest();
+            pushExercise(ex, Object.assign({ sideLabel: 'Lato 1 di 2' }, extra));
+            steps.push({ type: 'rest', seconds: Math.min(restSeconds, 15) });
+            pushExercise(ex, Object.assign({ sideLabel: 'Lato 2 di 2' }, extra));
+        } else {
+            maybeRest();
+            pushExercise(ex, extra);
+        }
+    };
+
+    (scheme.warmup || []).forEach((ex) => addExercise(ex));
+    (scheme.core || []).forEach((ex) => {
+        const sets = ex.sets || 1;
+        for (let s = 0; s < sets; s++) addExercise(ex, { setIndex: s + 1, setTotal: sets });
+    });
+    const rounds = scheme.rounds || 1;
+    for (let r = 0; r < rounds; r++) {
+        (scheme.circuit || []).forEach((ex) => addExercise(ex, { roundIndex: r + 1, roundTotal: rounds }));
+    }
+    (scheme.cooldown || []).forEach((ex) => addExercise(ex));
+
+    return steps;
+}
+
+function startGuidedWorkout() {
+    if (!appData.currentWorkoutScheme) return;
+    guidedSteps = buildGuidedSteps(appData.currentWorkoutScheme, GUIDED_DEFAULT_REST_SECONDS);
+    guidedIndex = 0;
+    document.getElementById('guided-modal').style.display = 'flex';
+    showGuidedStep();
+}
+
+function abortGuidedWorkout() {
+    clearGuidedTimer();
+    document.getElementById('guided-modal').style.display = 'none';
+}
+
+function clearGuidedTimer() {
+    if (guidedTimerId) { clearInterval(guidedTimerId); guidedTimerId = null; }
+}
+
+function showGuidedStep() {
+    clearGuidedTimer();
+    if (guidedIndex >= guidedSteps.length) {
+        finishGuidedWorkout();
+        return;
+    }
+    const step = guidedSteps[guidedIndex];
+    const exerciseSteps = guidedSteps.filter((s) => s.type === 'exercise');
+    const doneSoFar = guidedSteps.slice(0, guidedIndex + 1).filter((s) => s.type === 'exercise').length;
+    document.getElementById('guided-progress').innerText = 'Esercizio ' + Math.max(1, doneSoFar) + ' di ' + exerciseSteps.length;
+
+    const iconEl = document.getElementById('guided-icon-use');
+    const nameEl = document.getElementById('guided-name');
+    const descEl = document.getElementById('guided-desc');
+    const targetEl = document.getElementById('guided-target');
+    const doneBtn = document.getElementById('guided-btn-done');
+    const pauseBtn = document.getElementById('guided-btn-pause');
+    const extendBtn = document.getElementById('guided-btn-extend');
+    const skipRestBtn = document.getElementById('guided-btn-skip-rest');
+
+    if (step.type === 'rest') {
+        iconEl.setAttribute('href', '#pose-lying-breathing');
+        nameEl.innerText = 'Riposo';
+        const next = guidedSteps[guidedIndex + 1];
+        descEl.innerText = next ? ('Prossimo: ' + next.ex.name + (next.sideLabel ? ' (' + next.sideLabel + ')' : '')) : '';
+        targetEl.innerText = '';
+        doneBtn.style.display = 'none';
+        pauseBtn.style.display = 'none';
+        extendBtn.style.display = 'inline-block';
+        skipRestBtn.style.display = 'inline-block';
+        startGuidedCountdown(step.seconds);
+    } else {
+        const ex = step.ex;
+        iconEl.setAttribute('href', '#pose-' + poseIdForExercise(ex.id));
+        let title = ex.name;
+        if (step.sideLabel) title += ' — ' + step.sideLabel;
+        if (step.setTotal > 1) title += ' — Set ' + step.setIndex + '/' + step.setTotal;
+        if (step.roundTotal > 1) title += ' — Giro ' + step.roundIndex + '/' + step.roundTotal;
+        nameEl.innerText = title;
+        descEl.innerText = ex.desc || '';
+        targetEl.innerText = (ex.sets ? (ex.sets + ' x ') : '') + ex.qty + ' ' + ex.unit;
+        extendBtn.style.display = 'none';
+        skipRestBtn.style.display = 'none';
+
+        if (step.timed) {
+            doneBtn.style.display = 'none';
+            pauseBtn.style.display = 'inline-block';
+            pauseBtn.innerText = 'Pausa';
+            startGuidedCountdown(parseInt(ex.qty, 10) || 20);
+        } else {
+            doneBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+            document.getElementById('guided-timer').innerText = '';
+        }
+    }
+}
+
+function startGuidedCountdown(totalSeconds) {
+    guidedSecondsLeft = totalSeconds;
+    guidedPaused = false;
+    updateGuidedTimerDisplay();
+    clearGuidedTimer();
+    guidedTimerId = setInterval(() => {
+        if (guidedPaused) return;
+        guidedSecondsLeft--;
+        updateGuidedTimerDisplay();
+        if (guidedSecondsLeft <= 0) {
+            clearGuidedTimer();
+            playCueSound('chime');
+            advanceGuidedStep();
+        }
+    }, 1000);
+}
+
+function updateGuidedTimerDisplay() {
+    const m = Math.floor(Math.max(0, guidedSecondsLeft) / 60);
+    const s = Math.max(0, guidedSecondsLeft) % 60;
+    document.getElementById('guided-timer').innerText = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function guidedTogglePause() {
+    guidedPaused = !guidedPaused;
+    document.getElementById('guided-btn-pause').innerText = guidedPaused ? 'Riprendi' : 'Pausa';
+}
+
+function guidedExtendRest() {
+    guidedSecondsLeft += 15;
+    updateGuidedTimerDisplay();
+}
+
+function guidedSkipRest() {
+    clearGuidedTimer();
+    advanceGuidedStep();
+}
+
+function guidedMarkDone() {
+    clearGuidedTimer();
+    advanceGuidedStep();
+}
+
+function advanceGuidedStep() {
+    guidedIndex++;
+    showGuidedStep();
+}
+
+function finishGuidedWorkout() {
+    document.getElementById('guided-modal').style.display = 'none';
+    playCueSound('bell');
+    completeWorkout();
 }
 
 function saveFeedbackAndAdjust(fb) {
@@ -723,6 +925,7 @@ function startMeditation() {
             isMeditating = false;
             stopAmbientSound();
             cancelSpeech();
+            playCueSound('chime');
             document.getElementById('btn-start-meditation').innerText = "Avvia";
             document.getElementById('meditation-instruction').innerText = "Sessione Completata! 🧘 Com'è andata?";
             document.getElementById('meditation-caption').style.display = 'none';
@@ -797,78 +1000,102 @@ function updateMeditationDisplay() {
     }
 }
 
-// --- AUDIO AMBIENTE (sintetizzato via WebAudio, nessuna dipendenza esterna) ---
-
-const AMBIENT_PROFILES = {
-    relax:     { base: 110, detune: 4, lfo: 0.06,  gain: 0.05 },
-    focus:     { base: 174, detune: 3, lfo: 0.10,  gain: 0.045 },
-    sleep:     { base: 82,  detune: 2, lfo: 0.04,  gain: 0.05 },
-    emotions:  { base: 130, detune: 5, lfo: 0.05,  gain: 0.05 },
-    grounding: { base: 98,  detune: 3, lfo: 0.045, gain: 0.055 }
+// --- AUDIO AMBIENTE (motore "ambiently", sintesi Web Audio, zero file da scaricare) ---
+// Ogni obiettivo di meditazione ha 1-2 "strati" sonori procedurali (pioggia, oceano,
+// vento, ruscello, uccellini...) mixati con dissolvenze automatiche. Nessun audio
+// registrato: tutto generato al volo, quindi nessuna licenza da verificare e nessun
+// peso aggiuntivo di download. Se per qualche motivo il modulo non si carica (browser
+// molto datato), l'app resta comunque utilizzabile: la meditazione funziona lo stesso,
+// semplicemente senza sottofondo.
+const AMBIENT_LAYER_PRESETS = {
+    relax:     [{ synth: 'rain', volume: 0.45 }, { synth: 'wind', volume: 0.12 }],
+    focus:     [{ synth: 'stream', volume: 0.4 }, { synth: 'wind', volume: 0.1 }],
+    sleep:     [{ synth: 'ocean', volume: 0.45 }, { synth: 'wind', volume: 0.1 }],
+    emotions:  [{ synth: 'stream', volume: 0.35 }, { synth: 'birds', volume: 0.15 }],
+    grounding: [{ synth: 'birds', volume: 0.3 }, { synth: 'wind', volume: 0.2 }]
 };
 
-function getAmbientAudioCtx() {
-    if (!ambientAudioCtx) {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return null;
-        try { ambientAudioCtx = new Ctx(); } catch (e) { return null; }
+function getAmbientEngine() {
+    if (!window.AmbientlyEngine) return null;
+    if (!ambientEngine) {
+        try { ambientEngine = new window.AmbientlyEngine([], { fadeMs: 900 }); } catch (e) { return null; }
     }
-    return ambientAudioCtx;
+    return ambientEngine;
 }
 
 function startAmbientSound(goalId) {
-    const ctx = getAmbientAudioCtx();
-    if (!ctx) return;
-    stopAmbientSound();
-    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-
-    const profile = AMBIENT_PROFILES[goalId] || AMBIENT_PROFILES.relax;
-    const master = ctx.createGain();
-    master.gain.setValueAtTime(0, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(profile.gain, ctx.currentTime + 2.5);
-    master.connect(ctx.destination);
-
-    const osc1 = ctx.createOscillator();
-    osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(profile.base, ctx.currentTime);
-
-    const osc2 = ctx.createOscillator();
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(profile.base + profile.detune, ctx.currentTime);
-
-    const lfo = ctx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(profile.lfo, ctx.currentTime);
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.setValueAtTime(profile.gain * 0.4, ctx.currentTime);
-    lfo.connect(lfoGain);
-    lfoGain.connect(master.gain);
-
-    osc1.connect(master);
-    osc2.connect(master);
-    osc1.start();
-    osc2.start();
-    lfo.start();
-
-    ambientNodes = { master: master, osc1: osc1, osc2: osc2, lfo: lfo };
+    const engine = getAmbientEngine();
+    if (!engine) { console.warn('Motore suoni ambientali non disponibile: sessione senza sottofondo.'); return; }
+    const preset = AMBIENT_LAYER_PRESETS[goalId] || AMBIENT_LAYER_PRESETS.relax;
+    const layers = preset.map((l, i) => ({ id: goalId + '_' + i, synth: l.synth, volume: l.volume }));
+    try {
+        engine.crossfadeTo(layers);
+        engine.play();
+    } catch (e) { console.warn('Avvio suono ambientale non riuscito:', e); }
 }
 
 function stopAmbientSound() {
-    if (!ambientNodes || !ambientAudioCtx) { ambientNodes = null; return; }
-    const ctx = ambientAudioCtx;
-    const nodes = ambientNodes;
+    if (!ambientEngine) return;
+    try { ambientEngine.pause(); } catch (e) {}
+}
+
+// --- SEGNALI SONORI BREVI (bip di fine countdown, stesso motore "ambiently") ---
+
+function getHitsEngine() {
+    if (!window.createHits) return null;
+    if (!hitsEngine) {
+        try {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return null;
+            hitsCtx = hitsCtx || new Ctx();
+            hitsEngine = window.createHits(hitsCtx);
+        } catch (e) { return null; }
+    }
+    return hitsEngine;
+}
+
+// Bip breve e gradevole per segnalare la fine di un countdown (esercizio a tempo,
+// riposo) anche a chi non sta guardando lo schermo in quel momento.
+function playCueSound(name) {
     try {
-        nodes.master.gain.cancelScheduledValues(ctx.currentTime);
-        nodes.master.gain.setValueAtTime(nodes.master.gain.value, ctx.currentTime);
-        nodes.master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
-        setTimeout(() => {
-            try { nodes.osc1.stop(); nodes.osc2.stop(); nodes.lfo.stop(); } catch (e) {}
-        }, 700);
+        const hits = getHitsEngine();
+        if (!hits) return;
+        if (hitsCtx && hitsCtx.state === 'suspended') hitsCtx.resume().catch(() => {});
+        hits.play(name || 'chime');
     } catch (e) {}
-    ambientNodes = null;
 }
 
 // --- VOCE GUIDA (Web Speech API, con fallback automatico a solo testo) --------
+//
+// NOTA: la qualità di questa voce dipende dal dispositivo/browser, non dall'app —
+// non è possibile spedire una voce "di studio" pre-registrata dentro una PWA statica
+// senza un server che la generi (vedi changelog per i dettagli). Quello che possiamo
+// fare senza dipendenze esterne è scegliere, tra le voci italiane disponibili sul
+// dispositivo, quella migliore: molti telefoni (soprattutto Android/Chrome) offrono
+// sia una voce locale (più robotica, funziona offline) sia una voce "di rete" molto
+// più naturale (richiede connessione) - la preferiamo quando c'è.
+
+// Pre-carica la lista voci appena il browser la rende disponibile: su alcuni browser
+// il primo getVoices() ritorna vuoto finché non scatta l'evento 'voiceschanged'.
+if (window.speechSynthesis) {
+    try { window.speechSynthesis.getVoices(); } catch (e) {}
+    window.speechSynthesis.onvoiceschanged = function () {
+        try { window.speechSynthesis.getVoices(); } catch (e) {}
+    };
+}
+
+function pickBestItalianVoice(voices) {
+    const itVoices = (voices || []).filter(v => v.lang && v.lang.toLowerCase().indexOf('it') === 0);
+    if (itVoices.length === 0) return null;
+    const score = (v) => {
+        let s = 0;
+        if (v.localService === false) s += 10; // voce di rete: quasi sempre più naturale
+        if (/neural|natural|premium|wavenet|multilingual/i.test(v.name || '')) s += 5;
+        if (/google/i.test(v.name || '')) s += 3;
+        return s;
+    };
+    return itVoices.slice().sort((a, b) => score(b) - score(a))[0];
+}
 
 function speakCue(text) {
     if (!window.speechSynthesis) return;
@@ -878,8 +1105,7 @@ function speakCue(text) {
         utter.lang = 'it-IT';
         utter.rate = 0.9;
         utter.pitch = 0.95;
-        const voices = window.speechSynthesis.getVoices();
-        const itVoice = voices.find(v => v.lang && v.lang.toLowerCase().indexOf('it') === 0);
+        const itVoice = pickBestItalianVoice(window.speechSynthesis.getVoices());
         if (itVoice) utter.voice = itVoice;
         window.speechSynthesis.speak(utter);
     } catch (e) { console.warn('Sintesi vocale non disponibile, resta il testo a schermo:', e); }
