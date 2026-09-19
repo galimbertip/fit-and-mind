@@ -41,6 +41,7 @@ function defaultAppData(username) {
     return {
         username: username || '',
         dob: '', height: '', netWeight: '', weightCondition: 'leggero',
+        ambientSoundChoice: 'auto', ambientVolume: 0.4,
         mood: 'Sereno / Equilibrato', sleep: '3/5 - Discreto', energy: 'Media (50%)',
         totalWorkouts: 0, totalMeditations: 0, lastFeedback: 'Nessuno',
         currentWorkoutScheme: null, currentWorkoutDate: '',
@@ -83,6 +84,8 @@ function normalizeAppData(d) {
     d.meditationGoalDefault = d.meditationGoalDefault || 'relax';
     d.meditationFormatPref = d.meditationFormatPref || 'entrambe';
     d.weightCondition = d.weightCondition || 'leggero';
+    d.ambientSoundChoice = d.ambientSoundChoice || 'auto';
+    d.ambientVolume = (typeof d.ambientVolume === 'number') ? d.ambientVolume : 0.4;
     return d;
 }
 
@@ -799,6 +802,14 @@ function initMeditationTab() {
     currentMeditationGoal = goal;
     const pref = appData.meditationFormatPref;
     setMeditationMode(pref === 'libera' ? 'libera' : 'guidata');
+
+    populateAmbientSoundSelect();
+    document.getElementById('ambient-sound-select').value = appData.ambientSoundChoice || 'auto';
+    const volPct = Math.round(((typeof appData.ambientVolume === 'number') ? appData.ambientVolume : 0.4) * 100);
+    document.getElementById('ambient-volume-slider').value = volPct;
+    document.getElementById('ambient-volume-label').innerText = volPct + '%';
+    toggleAmbientControlsVisibility();
+    updateVoiceDiagnostics();
 }
 
 function setMeditationMode(mode) {
@@ -1015,10 +1026,73 @@ const AMBIENT_LAYER_PRESETS = {
     grounding: [{ synth: 'birds', volume: 0.3 }, { synth: 'wind', volume: 0.2 }]
 };
 
+// Sottoinsieme curato dei preset "ambiently" adatto a un sottofondo di meditazione
+// (escluse voci come "città"/"orologio"/"vinile" pensate per altri usi). "Automatico"
+// mantiene il comportamento precedente (combinazione scelta in base all'obiettivo).
+const AMBIENT_SOUND_OPTIONS = [
+    { id: 'auto', label: "Automatico (in base all'obiettivo)" },
+    { id: 'rain', label: '🌧️ Pioggia' },
+    { id: 'ocean', label: '🌊 Oceano' },
+    { id: 'stream', label: '🏞️ Ruscello' },
+    { id: 'wind', label: '🍃 Vento' },
+    { id: 'birds', label: '🐦 Uccellini' },
+    { id: 'crickets', label: '🦗 Grilli' },
+    { id: 'frogs', label: '🐸 Rane' },
+    { id: 'fire', label: '🔥 Fuoco / Camino' },
+    { id: 'thunder', label: '⛈️ Temporale' },
+    { id: 'snow', label: '❄️ Vento gelido' }
+];
+
+function populateAmbientSoundSelect() {
+    const select = document.getElementById('ambient-sound-select');
+    select.innerHTML = '';
+    AMBIENT_SOUND_OPTIONS.forEach((s) => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.innerText = s.label;
+        select.appendChild(opt);
+    });
+}
+
+function toggleAmbientControlsVisibility() {
+    const on = document.getElementById('music-toggle').checked;
+    document.getElementById('ambient-sound-group').style.display = on ? 'block' : 'none';
+    document.getElementById('ambient-volume-group').style.display = on ? 'flex' : 'none';
+}
+
+// Cambio del suono scelto manualmente: salvato sul profilo (sincronizzato come tutto
+// il resto), e se la meditazione è già in corso il sottofondo passa dolcemente al
+// nuovo suono senza dover fermare/riavviare la sessione.
+function onAmbientSoundChange() {
+    appData.ambientSoundChoice = document.getElementById('ambient-sound-select').value;
+    saveData();
+    if (isMeditating && document.getElementById('music-toggle').checked) {
+        startAmbientSound(currentMeditationGoal);
+    }
+}
+
+// Cursore volume: valore percentuale salvato sul profilo (0.4 = 40%, default più
+// basso del volume di layer precedente per correggere il "troppo forte" segnalato).
+// Se il motore audio è già attivo, il volume cambia dal vivo con una breve dissolvenza.
+function onAmbientVolumeChange() {
+    const pct = Number(document.getElementById('ambient-volume-slider').value);
+    document.getElementById('ambient-volume-label').innerText = pct + '%';
+    appData.ambientVolume = pct / 100;
+    saveData();
+    if (ambientEngine) {
+        try { ambientEngine.setMasterVolume(appData.ambientVolume, 120); } catch (e) {}
+    }
+}
+
 function getAmbientEngine() {
     if (!window.AmbientlyEngine) return null;
     if (!ambientEngine) {
-        try { ambientEngine = new window.AmbientlyEngine([], { fadeMs: 900 }); } catch (e) { return null; }
+        try {
+            ambientEngine = new window.AmbientlyEngine([], {
+                fadeMs: 900,
+                masterVolume: (typeof appData.ambientVolume === 'number') ? appData.ambientVolume : 0.4
+            });
+        } catch (e) { return null; }
     }
     return ambientEngine;
 }
@@ -1026,11 +1100,18 @@ function getAmbientEngine() {
 function startAmbientSound(goalId) {
     const engine = getAmbientEngine();
     if (!engine) { console.warn('Motore suoni ambientali non disponibile: sessione senza sottofondo.'); return; }
-    const preset = AMBIENT_LAYER_PRESETS[goalId] || AMBIENT_LAYER_PRESETS.relax;
-    const layers = preset.map((l, i) => ({ id: goalId + '_' + i, synth: l.synth, volume: l.volume }));
+    const choice = appData.ambientSoundChoice || 'auto';
+    let layers;
+    if (choice === 'auto') {
+        const preset = AMBIENT_LAYER_PRESETS[goalId] || AMBIENT_LAYER_PRESETS.relax;
+        layers = preset.map((l, i) => ({ id: goalId + '_' + i, synth: l.synth, volume: l.volume }));
+    } else {
+        layers = [{ id: 'manual_' + choice, synth: choice, volume: 0.5 }];
+    }
     try {
         engine.crossfadeTo(layers);
         engine.play();
+        engine.setMasterVolume((typeof appData.ambientVolume === 'number') ? appData.ambientVolume : 0.4, 0);
     } catch (e) { console.warn('Avvio suono ambientale non riuscito:', e); }
 }
 
@@ -1081,7 +1162,25 @@ if (window.speechSynthesis) {
     try { window.speechSynthesis.getVoices(); } catch (e) {}
     window.speechSynthesis.onvoiceschanged = function () {
         try { window.speechSynthesis.getVoices(); } catch (e) {}
+        updateVoiceDiagnostics();
     };
+}
+
+// Mostra a schermo (non solo in console) quante e quali voci italiane il browser
+// rende disponibili: su molti telefoni Android la voce robotica non è un bug
+// dell'app ma il pacchetto voce di sistema — questo permette di distinguere i due
+// casi senza dover aprire gli strumenti sviluppatore.
+function updateVoiceDiagnostics() {
+    const el = document.getElementById('voice-diag-text');
+    if (!el) return;
+    if (!window.speechSynthesis) { el.innerText = ''; return; }
+    const itVoices = (window.speechSynthesis.getVoices() || []).filter(v => v.lang && v.lang.toLowerCase().indexOf('it') === 0);
+    if (itVoices.length === 0) {
+        el.innerText = 'Nessuna voce italiana trovata su questo dispositivo/browser.';
+        return;
+    }
+    const names = itVoices.map(v => v.name + (v.localService === false ? ' (rete)' : ' (locale)')).join(', ');
+    el.innerText = 'Voci italiane trovate (' + itVoices.length + '): ' + names;
 }
 
 function pickBestItalianVoice(voices) {
