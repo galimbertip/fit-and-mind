@@ -39,7 +39,7 @@ let ambientNodes = null;
 function defaultAppData(username) {
     return {
         username: username || '',
-        dob: '', height: '', netWeight: '',
+        dob: '', height: '', netWeight: '', weightCondition: 'leggero',
         mood: 'Sereno / Equilibrato', sleep: '3/5 - Discreto', energy: 'Media (50%)',
         totalWorkouts: 0, totalMeditations: 0, lastFeedback: 'Nessuno',
         currentWorkoutScheme: null, currentWorkoutDate: '',
@@ -81,6 +81,7 @@ function normalizeAppData(d) {
     d.selfAwareness = d.selfAwareness || 3;
     d.meditationGoalDefault = d.meditationGoalDefault || 'relax';
     d.meditationFormatPref = d.meditationFormatPref || 'entrambe';
+    d.weightCondition = d.weightCondition || 'leggero';
     return d;
 }
 
@@ -268,8 +269,9 @@ function openRegisterModal() {
     // Reset dei campi del form: intervista completa per un profilo nuovo.
     document.getElementById('input-username').value = '';
     document.getElementById('input-dob').value = '';
-    document.getElementById('input-height').value = '';
-    document.getElementById('input-weight').value = '';
+    document.getElementById('input-height').value = '170';
+    document.getElementById('input-weight').value = '70';
+    document.getElementById('input-weight-condition').value = 'leggero';
     document.getElementById('input-activity').value = 'moderato';
     document.getElementById('input-fitness-goal').value = 'pancia';
     document.getElementById('limit-ginocchia').checked = false;
@@ -294,8 +296,9 @@ function openRegisterModal() {
 function openProfileModal() {
     document.getElementById('input-username').value = appData.username || currentUsername || '';
     document.getElementById('input-dob').value = appData.dob || '';
-    document.getElementById('input-height').value = appData.height || '';
-    document.getElementById('input-weight').value = appData.netWeight || '';
+    document.getElementById('input-height').value = appData.height || '170';
+    document.getElementById('input-weight').value = appData.netWeight || '70';
+    document.getElementById('input-weight-condition').value = appData.weightCondition || 'leggero';
     document.getElementById('input-activity').value = appData.activityLevel || 'moderato';
     document.getElementById('input-fitness-goal').value = appData.fitnessGoal || 'pancia';
     const limitations = appData.limitations || [];
@@ -435,6 +438,7 @@ function saveProfile() {
     appData.dob = document.getElementById('input-dob').value;
     appData.height = document.getElementById('input-height').value;
     appData.netWeight = document.getElementById('input-weight').value;
+    appData.weightCondition = document.getElementById('input-weight-condition').value;
     appData.activityLevel = document.getElementById('input-activity').value;
     appData.fitnessGoal = document.getElementById('input-fitness-goal').value;
     appData.limitations = ['ginocchia', 'schiena', 'polsi_spalle'].filter(l => document.getElementById('limit-' + l).checked);
@@ -924,7 +928,14 @@ function renderAllUI() {
     document.getElementById('prof-name').innerText = appData.username || '-';
     document.getElementById('prof-age').innerText = calculateAge(appData.dob) + (appData.dob ? " anni" : "");
     document.getElementById('prof-height').innerText = (appData.height ? appData.height + " cm" : '-');
-    document.getElementById('prof-weight').innerText = (appData.netWeight ? appData.netWeight + " kg" : '-');
+    const weightConditionLabels = {
+        nudo: 'nudo/a digiuno', intimo: 'solo intimo', leggero: 'abb. leggero',
+        normale: 'abb. normale', pesante: 'abb. pesante'
+    };
+    const weightConditionLabel = weightConditionLabels[appData.weightCondition] || '';
+    document.getElementById('prof-weight').innerText = appData.netWeight
+        ? appData.netWeight + " kg" + (weightConditionLabel ? " (" + weightConditionLabel + ")" : '')
+        : '-';
     document.getElementById('prof-mood').innerText = appData.mood || '-';
     document.getElementById('prof-sleep').innerText = appData.sleep || '-';
     document.getElementById('prof-energy').innerText = appData.energy || '-';
