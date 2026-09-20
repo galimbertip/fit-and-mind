@@ -522,10 +522,16 @@ function regenerateWorkout() {
 // diverso per ognuno dei ~50 esercizi, ma un set di pose di base facilmente riconoscibili.
 const EXERCISE_POSE_MAP = {
     w1: 'standing-arms-out', w2: 'standing-hip-hands', w3: 'marching', w4: 'lunge', w5: 'cat-cow', w6: 'squat', w7: 'jumping-jack', w8: 'torso-twist',
+    // w9/w11 sono in quadrupedia come cat-cow (posa più simile disponibile); w10 include un affondo.
+    w9: 'cat-cow', w10: 'lunge', w11: 'cat-cow',
     c1: 'standing-quad-stretch', c2: 'standing-hamstring-stretch', c3: 'childs-pose', c4: 'side-bend', c5: 'lying-breathing',
+    // c7 (Cane a Testa in Giù) non ha una posa dedicata tra le 31 base: 'plank' è la più vicina
+    // per appoggio mani/piedi a terra. c9 riusa 'childs-pose' come piegamento in avanti.
+    c6: 'seated-twist', c7: 'plank', c8: 'lunge', c9: 'childs-pose',
     k1: 'plank', k2: 'plank', k3: 'crunch', k4: 'leg-raise', k5: 'crunch', k6: 'seated-twist', k7: 'side-plank', k8: 'plank',
     k9: 'dead-bug', k10: 'superman', k11: 'plank', k12: 'v-up', k13: 'hollow-hold', k14: 'torso-twist',
     k15: 'l-sit', k16: 'l-sit', k17: 'l-sit', k18: 'dragon-flag',
+    k19: 'hollow-hold', k20: 'glute-bridge', k21: 'leg-raise',
     s1: 'squat', s2: 'lunge', s3: 'jumping-jack', s4: 'push-up', s5: 'push-up', s6: 'glute-bridge', s7: 'marching', s8: 'wall-sit',
     s9: 'burpee', s10: 'plank', s11: 'squat', s12: 'burpee', s13: 'lunge', s14: 'lunge', s15: 'pike-push-up',
     s16: 'pistol-squat', s17: 'pistol-squat', s18: 'pistol-squat', s19: 'push-up', s20: 'wall-walk'
@@ -800,6 +806,7 @@ function initMeditationTab() {
     const goal = MEDITATION_GOALS.some(g => g.id === appData.meditationGoalDefault) ? appData.meditationGoalDefault : 'relax';
     document.getElementById('meditation-goal').value = goal;
     currentMeditationGoal = goal;
+    updateBreathUIVisibility();
     const pref = appData.meditationFormatPref;
     setMeditationMode(pref === 'libera' ? 'libera' : 'guidata');
 
@@ -828,7 +835,49 @@ function setMeditationMode(mode) {
 
 function updateMeditationConfig() {
     currentMeditationGoal = document.getElementById('meditation-goal').value;
+    updateBreathUIVisibility();
     resetMeditation();
+}
+
+// --- RESPIRO CONSAPEVOLE (timer visivo 4-7-8) -------------------------------
+// Il cerchio si allarga durante l'inspirazione, resta fermo durante la trattenuta,
+// si restringe durante l'espirazione: la durata della transizione CSS è impostata
+// dinamicamente sulla durata reale della fase (breathPhaseAt, da engine.js), così
+// l'animazione è sempre sincronizzata col conteggio anche se il tab perde e riguadagna
+// il focus del browser.
+let breathLastPhase = null;
+const BREATH_PHASE_LABELS = { inspira: 'Inspira', trattieni: 'Trattieni', espira: 'Espira' };
+
+function updateBreathUIVisibility() {
+    const show = (currentMeditationGoal === 'breath');
+    document.getElementById('breath-visual-container').style.display = show ? 'flex' : 'none';
+    document.getElementById('breath-safety-note').style.display = show ? 'block' : 'none';
+}
+
+function setBreathPreview() {
+    breathLastPhase = null;
+    const circle = document.getElementById('breath-circle');
+    if (!circle) return;
+    circle.style.transition = 'none';
+    circle.style.transform = 'scale(1)';
+    document.getElementById('breath-phase-label').innerText = BREATH_PHASE_LABELS.inspira;
+    document.getElementById('breath-phase-count').innerText = String(BREATHING_PATTERN_478.inhale);
+}
+
+function updateBreathVisual() {
+    if (!isMeditating) { setBreathPreview(); return; }
+    const elapsed = meditationTotalSeconds - meditationSeconds;
+    const info = breathPhaseAt(elapsed);
+    document.getElementById('breath-phase-label').innerText = BREATH_PHASE_LABELS[info.phase];
+    document.getElementById('breath-phase-count').innerText = String(Math.ceil(info.secondsLeftInPhase));
+
+    if (info.phase !== breathLastPhase) {
+        breathLastPhase = info.phase;
+        const circle = document.getElementById('breath-circle');
+        const targetScale = (info.phase === 'espira') ? 1 : 1.4;
+        circle.style.transition = 'transform ' + info.phaseDuration + 's ease-in-out';
+        circle.style.transform = 'scale(' + targetScale + ')';
+    }
 }
 
 function buildMoodPickers() {
@@ -988,6 +1037,10 @@ function updateMeditationDisplay() {
     const s = meditationSeconds % 60;
     document.getElementById('meditation-timer').innerText = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 
+    if (currentMeditationGoal === 'breath') {
+        updateBreathVisual();
+    }
+
     if (!isMeditating) return;
 
     if (currentMeditationMode === 'guidata') {
@@ -1023,7 +1076,9 @@ const AMBIENT_LAYER_PRESETS = {
     focus:     [{ synth: 'stream', volume: 0.4 }, { synth: 'wind', volume: 0.1 }],
     sleep:     [{ synth: 'ocean', volume: 0.45 }, { synth: 'wind', volume: 0.1 }],
     emotions:  [{ synth: 'stream', volume: 0.35 }, { synth: 'birds', volume: 0.15 }],
-    grounding: [{ synth: 'birds', volume: 0.3 }, { synth: 'wind', volume: 0.2 }]
+    grounding: [{ synth: 'birds', volume: 0.3 }, { synth: 'wind', volume: 0.2 }],
+    // Molto discreto: qui il protagonista è il cerchio animato del respiro, non il sottofondo.
+    breath:    [{ synth: 'pad', volume: 0.25 }]
 };
 
 // Sottoinsieme curato dei preset "ambiently" adatto a un sottofondo di meditazione
