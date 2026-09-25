@@ -16,6 +16,52 @@ const firebaseConfig = {
     appId: "1:591471755393:web:b234ea3068fd57d319cd80"
 };
 
+// --- PESO NETTO STIMATO (v6.4.0) --------------------------------------------
+// Pesi medi indicativi (in grammi) di indumenti comuni, per stimare quanto pesa
+// il "vestiario" al momento della pesata e ricavare un peso corporeo netto più
+// confrontabile nel tempo, anche se ci si pesa vestiti in modo diverso da una
+// volta all'altra. Valori orientativi, non una misura precisa del capo reale.
+// Dichiarati qui (prima di 'appData') perché defaultAppData(), chiamata poco sotto
+// per inizializzare 'appData', li usa già: essendo const, sarebbero altrimenti
+// ancora nella "temporal dead zone" al momento di quella prima chiamata.
+const CLOTHING_ITEMS = [
+    { key: 'underwear', grams: 60 },
+    { key: 'socks', grams: 50 },
+    { key: 'tshirt', grams: 150 },
+    { key: 'longsleeve', grams: 250 },
+    { key: 'hoodie', grams: 600 },
+    { key: 'jacket_light', grams: 700 },
+    { key: 'jacket_heavy', grams: 1200 },
+    { key: 'shorts', grams: 200 },
+    { key: 'leggings', grams: 300 },
+    { key: 'pants', grams: 600 },
+    { key: 'slippers', grams: 250 },
+    { key: 'shoes', grams: 600 },
+    { key: 'accessories', grams: 100 }
+];
+
+// Preselezione ragionevole per un nuovo profilo (equivalente alla vecchia opzione
+// "Abbigliamento leggero" di v6.3.0 e precedenti).
+const CLOTHING_DEFAULT_NEW_PROFILE = ['underwear', 'socks', 'tshirt', 'shorts'];
+
+// Migrazione dei profili creati prima della v6.4.0: la vecchia domanda "Come ti sei
+// pesato" (una sola scelta tra 5) diventa un set di indumenti pre-spuntato coerente,
+// così chi ha già un profilo non deve ripartire da zero alla prima modifica.
+const WEIGHT_CONDITION_TO_CLOTHING = {
+    nudo: [],
+    intimo: ['underwear'],
+    leggero: ['underwear', 'socks', 'tshirt', 'shorts'],
+    normale: ['underwear', 'socks', 'longsleeve', 'pants', 'shoes'],
+    pesante: ['underwear', 'socks', 'hoodie', 'jacket_light', 'pants', 'shoes']
+};
+
+function clothingGramsFor(keys) {
+    return (keys || []).reduce((sum, key) => {
+        const item = CLOTHING_ITEMS.find((c) => c.key === key);
+        return sum + (item ? item.grams : 0);
+    }, 0);
+}
+
 let db = null;
 let currentUsername = localStorage.getItem('fm_user');
 let userRef = null;
@@ -35,12 +81,24 @@ let ambientEngine = null;
 let hitsCtx = null;
 let hitsEngine = null;
 
+// Stato transitorio del wizard di onboarding (non persistito): governa il suggerimento
+// automatico dell'obiettivo di meditazione di default, vedi suggestMeditationGoal() più sotto.
+let isOnboardingWizardActive = false;
+let medGoalManuallySet = false;
+
 // --- DATI: default, storage locale, normalizzazione -----------------------
 
 function defaultAppData(username) {
     return {
         username: username || '',
         dob: '', height: '', netWeight: '', weightCondition: 'leggero',
+        // v6.4.0: 'weightAsWorn' è il numero letto sulla bilancia, 'clothingItems' cosa si indossava.
+        // 'netWeight' resta il peso netto stimato (weightAsWorn meno il peso stimato degli indumenti),
+        // calcolato in saveProfile() — così tutti i punti dell'app che leggono già 'netWeight' non
+        // devono cambiare nulla. NOTA: 'clothingItems' non ha un default qui apposta — deve restare
+        // "assente" così normalizeAppData() può distinguere un profilo senza indumenti salvati (e
+        // migrare dalla vecchia 'weightCondition') da uno che li ha già impostati esplicitamente.
+        weightAsWorn: '',
         ambientSoundChoice: 'auto', ambientVolume: 0.4,
         mood: 'Sereno / Equilibrato', sleep: '3/5 - Discreto', energy: 'Media (50%)',
         totalWorkouts: 0, totalMeditations: 0, lastFeedback: 'Nessuno',
@@ -53,9 +111,16 @@ function defaultAppData(username) {
         activityLevel: 'moderato',
         fitnessGoal: 'pancia',
         limitations: [],
+        // Screening tipo PAR-Q (v6.3.0): nessuna diagnosi, solo una domanda pratica unica invece
+        // delle 7 domande cliniche originali, per non trasformare l'iscrizione in un modulo medico.
+        medicalCaution: false,
         meditationExperience: 'qualche_volta',
         stressLevel: 3,
         selfAwareness: 3,
+        // v6.3.0: due nuove domande nell'intervista che alimentano il suggerimento automatico
+        // dell'obiettivo di meditazione di default e un piccolo bonus al Livello Mente di partenza.
+        sleepDifficulty: 'mai',
+        mindBodyExperience: 'mai',
         meditationGoalDefault: 'relax',
         meditationFormatPref: 'entrambe',
         mind: { level: 1, consecutiveEasy: 0, consecutiveOk: 0 },
@@ -78,12 +143,21 @@ function normalizeAppData(d) {
     d.limitations = d.limitations || [];
     d.activityLevel = d.activityLevel || 'moderato';
     d.fitnessGoal = d.fitnessGoal || 'pancia';
+    d.medicalCaution = !!d.medicalCaution;
     d.meditationExperience = d.meditationExperience || 'qualche_volta';
     d.stressLevel = d.stressLevel || 3;
     d.selfAwareness = d.selfAwareness || 3;
+    d.sleepDifficulty = d.sleepDifficulty || 'mai';
+    d.mindBodyExperience = d.mindBodyExperience || 'mai';
     d.meditationGoalDefault = d.meditationGoalDefault || 'relax';
     d.meditationFormatPref = d.meditationFormatPref || 'entrambe';
     d.weightCondition = d.weightCondition || 'leggero';
+    // v6.4.0: se manca ancora 'clothingItems' (profilo creato prima di questa versione,
+    // o mai salvato di nuovo da allora), lo deduciamo dalla vecchia risposta singola.
+    if (!Array.isArray(d.clothingItems)) {
+        d.clothingItems = (WEIGHT_CONDITION_TO_CLOTHING[d.weightCondition] || CLOTHING_DEFAULT_NEW_PROFILE).slice();
+    }
+    if (!d.weightAsWorn) d.weightAsWorn = d.netWeight || '';
     d.ambientSoundChoice = d.ambientSoundChoice || 'auto';
     d.ambientVolume = (typeof d.ambientVolume === 'number') ? d.ambientVolume : 0.4;
     return d;
@@ -275,25 +349,37 @@ function openRegisterModal() {
     document.getElementById('input-dob').value = '';
     document.getElementById('input-height').value = '170';
     document.getElementById('input-weight').value = '70';
-    document.getElementById('input-weight-condition').value = 'leggero';
+    setClothingCheckboxes(CLOTHING_DEFAULT_NEW_PROFILE);
     document.getElementById('input-activity').value = 'moderato';
     document.getElementById('input-fitness-goal').value = 'pancia';
     document.getElementById('limit-ginocchia').checked = false;
     document.getElementById('limit-schiena').checked = false;
     document.getElementById('limit-polsi_spalle').checked = false;
+    document.getElementById('limit-caviglie_piedi').checked = false;
+    document.getElementById('limit-anche').checked = false;
+    document.getElementById('input-medical-caution').value = 'no';
     document.getElementById('input-med-experience').value = 'qualche_volta';
     document.getElementById('input-stress').value = '3';
     document.getElementById('input-selfaware').value = '3';
+    document.getElementById('input-sleep-difficulty').value = 'mai';
+    document.getElementById('input-mindbody-experience').value = 'mai';
     document.getElementById('input-med-goal').value = 'relax';
     document.getElementById('input-med-format').value = 'entrambe';
     document.getElementById('input-mood').value = 'Sereno / Equilibrato';
     document.getElementById('input-sleep').value = '3/5 - Discreto';
     document.getElementById('input-energy').value = 'Media (50%)';
 
+    // Il suggerimento automatico dell'obiettivo di meditazione (vedi suggestMeditationGoal) è
+    // attivo solo durante questa intervista di creazione: in modifica rapida di un profilo già
+    // esistente (openProfileModal) non deve sovrascrivere una scelta già fatta dalla persona.
+    isOnboardingWizardActive = true;
+    medGoalManuallySet = false;
+
     document.getElementById('profile-modal-title').innerText = "Facciamo Conoscenza";
     document.getElementById('profile-modal').classList.add('wizard-mode');
     document.getElementById('wizard-progress').style.display = 'block';
     wizardGoToStep(1);
+    updateWeightPreview();
     document.getElementById('profile-modal').style.display = 'flex';
 }
 
@@ -301,27 +387,67 @@ function openProfileModal() {
     document.getElementById('input-username').value = appData.username || currentUsername || '';
     document.getElementById('input-dob').value = appData.dob || '';
     document.getElementById('input-height').value = appData.height || '170';
-    document.getElementById('input-weight').value = appData.netWeight || '70';
-    document.getElementById('input-weight-condition').value = appData.weightCondition || 'leggero';
+    document.getElementById('input-weight').value = appData.weightAsWorn || appData.netWeight || '70';
+    setClothingCheckboxes(appData.clothingItems || CLOTHING_DEFAULT_NEW_PROFILE);
     document.getElementById('input-activity').value = appData.activityLevel || 'moderato';
     document.getElementById('input-fitness-goal').value = appData.fitnessGoal || 'pancia';
     const limitations = appData.limitations || [];
     document.getElementById('limit-ginocchia').checked = limitations.indexOf('ginocchia') !== -1;
     document.getElementById('limit-schiena').checked = limitations.indexOf('schiena') !== -1;
     document.getElementById('limit-polsi_spalle').checked = limitations.indexOf('polsi_spalle') !== -1;
+    document.getElementById('limit-caviglie_piedi').checked = limitations.indexOf('caviglie_piedi') !== -1;
+    document.getElementById('limit-anche').checked = limitations.indexOf('anche') !== -1;
+    document.getElementById('input-medical-caution').value = appData.medicalCaution ? 'si' : 'no';
     document.getElementById('input-med-experience').value = appData.meditationExperience || 'qualche_volta';
     document.getElementById('input-stress').value = String(appData.stressLevel || 3);
     document.getElementById('input-selfaware').value = String(appData.selfAwareness || 3);
+    document.getElementById('input-sleep-difficulty').value = appData.sleepDifficulty || 'mai';
+    document.getElementById('input-mindbody-experience').value = appData.mindBodyExperience || 'mai';
     document.getElementById('input-med-goal').value = appData.meditationGoalDefault || 'relax';
     document.getElementById('input-med-format').value = appData.meditationFormatPref || 'entrambe';
     document.getElementById('input-mood').value = appData.mood || 'Sereno / Equilibrato';
     document.getElementById('input-sleep').value = appData.sleep || '3/5 - Discreto';
     document.getElementById('input-energy').value = appData.energy || 'Media (50%)';
 
+    // In modifica rapida NON attiviamo il suggerimento automatico dell'obiettivo di meditazione:
+    // la persona ha già un obiettivo scelto in precedenza e non deve vederselo cambiare da solo
+    // solo perché tocca le nuove domande su sonno/esperienza corpo-mente.
+    isOnboardingWizardActive = false;
+
     document.getElementById('profile-modal-title').innerText = "Profilo & Stato Psicofisico";
     document.getElementById('profile-modal').classList.remove('wizard-mode');
     document.getElementById('wizard-progress').style.display = 'none';
+    updateWeightPreview();
     document.getElementById('profile-modal').style.display = 'flex';
+}
+
+// Spunta nel form solo le checkbox indumento la cui chiave è nell'elenco passato,
+// scheckando tutte le altre — usata sia al reset del wizard sia al popolamento
+// della modifica rapida, così i due punti di ingresso restano sempre in sync.
+function setClothingCheckboxes(keys) {
+    CLOTHING_ITEMS.forEach((item) => {
+        const el = document.getElementById('cloth-' + item.key);
+        if (el) el.checked = keys.indexOf(item.key) !== -1;
+    });
+}
+
+function getCheckedClothingKeys() {
+    return CLOTHING_ITEMS.map((item) => item.key).filter((key) => {
+        const el = document.getElementById('cloth-' + key);
+        return el && el.checked;
+    });
+}
+
+// Ricalcola e mostra dal vivo il peso netto stimato mentre si spuntano gli indumenti
+// o si modifica il peso letto sulla bilancia, prima ancora di salvare il profilo.
+function updateWeightPreview() {
+    const preview = document.getElementById('weight-net-preview');
+    if (!preview) return;
+    const raw = parseFloat(document.getElementById('input-weight').value);
+    if (!raw || raw <= 0) { preview.innerText = ''; return; }
+    const grams = clothingGramsFor(getCheckedClothingKeys());
+    const net = Math.max(0, Math.round((raw - grams / 1000) * 10) / 10);
+    preview.innerText = '≈ ' + net.toFixed(1) + ' kg netto (indumenti stimati: ' + (grams / 1000).toFixed(2) + ' kg)';
 }
 
 function wizardGoToStep(n) {
@@ -441,14 +567,29 @@ function saveProfile() {
     appData.username = userVal;
     appData.dob = document.getElementById('input-dob').value;
     appData.height = document.getElementById('input-height').value;
-    appData.netWeight = document.getElementById('input-weight').value;
-    appData.weightCondition = document.getElementById('input-weight-condition').value;
+    // v6.4.0: 'weightAsWorn' è il numero letto sulla bilancia; 'netWeight' diventa il peso netto
+    // stimato, cioè quel numero meno una stima del peso degli indumenti spuntati. 'weightCondition'
+    // resta salvato solo per compatibilità con profili di versioni precedenti (non è più mostrato
+    // né modificato dal form).
+    appData.weightAsWorn = document.getElementById('input-weight').value;
+    appData.clothingItems = getCheckedClothingKeys();
+    const rawWeight = parseFloat(appData.weightAsWorn) || 0;
+    const clothingGrams = clothingGramsFor(appData.clothingItems);
+    appData.netWeight = rawWeight > 0 ? (Math.max(0, Math.round((rawWeight - clothingGrams / 1000) * 10) / 10)).toString() : '';
     appData.activityLevel = document.getElementById('input-activity').value;
     appData.fitnessGoal = document.getElementById('input-fitness-goal').value;
-    appData.limitations = ['ginocchia', 'schiena', 'polsi_spalle'].filter(l => document.getElementById('limit-' + l).checked);
+    const declaredLimitations = ['ginocchia', 'schiena', 'polsi_spalle', 'caviglie_piedi', 'anche'].filter(l => document.getElementById('limit-' + l).checked);
+    appData.medicalCaution = document.getElementById('input-medical-caution').value === 'si';
+    // 'alto_impatto' non è una checkbox propria: è dedotta dallo screening medico e riusa lo
+    // stesso meccanismo di filtro (avoidIf) già usato per ginocchia/schiena/polsi-spalle/ecc.,
+    // così generateWorkout in engine.js non ha bisogno di alcuna logica dedicata per gestirla.
+    if (appData.medicalCaution) declaredLimitations.push('alto_impatto');
+    appData.limitations = declaredLimitations;
     appData.meditationExperience = document.getElementById('input-med-experience').value;
     appData.stressLevel = Number(document.getElementById('input-stress').value);
     appData.selfAwareness = Number(document.getElementById('input-selfaware').value);
+    appData.sleepDifficulty = document.getElementById('input-sleep-difficulty').value;
+    appData.mindBodyExperience = document.getElementById('input-mindbody-experience').value;
     appData.meditationGoalDefault = document.getElementById('input-med-goal').value;
     appData.meditationFormatPref = document.getElementById('input-med-format').value;
     appData.mood = document.getElementById('input-mood').value;
@@ -458,8 +599,8 @@ function saveProfile() {
     // I livelli di partenza si calcolano dall'intervista SOLO la prima volta:
     // una modifica successiva ai parametri non deve resettare i progressi guadagnati.
     if (isFirstOnboarding) {
-        appData.fitness.level = startingFitnessLevel(appData.activityLevel);
-        appData.mind.level = startingMindLevel(appData.meditationExperience, appData.selfAwareness);
+        appData.fitness.level = startingFitnessLevel(appData.activityLevel, appData.medicalCaution);
+        appData.mind.level = startingMindLevel(appData.meditationExperience, appData.selfAwareness, appData.mindBodyExperience);
         appData.onboardingDone = true;
     }
 
@@ -472,6 +613,36 @@ function saveProfile() {
     showDashboardUI();
     renderAllUI();
     attachFirebaseListener(currentUsername);
+}
+
+// --- SUGGERIMENTO AUTOMATICO OBIETTIVO DI MEDITAZIONE (v6.3.0) ---------------
+// Le due nuove domande dell'intervista (difficoltà di sonno, esperienza corpo-mente) propongono
+// un obiettivo di meditazione di default più mirato, aggiornando dal vivo la select "Obiettivo
+// principale della pratica" così la persona vede subito il suggerimento e può comunque cambiarlo
+// a mano in qualunque momento. Attivo solo durante l'intervista di creazione (vedi
+// isOnboardingWizardActive), mai in modifica rapida di un profilo esistente.
+function suggestMeditationGoal() {
+    if (!isOnboardingWizardActive || medGoalManuallySet) return;
+    const sleepDifficulty = document.getElementById('input-sleep-difficulty').value;
+    const mindBodyExperience = document.getElementById('input-mindbody-experience').value;
+    // Priorità: un bisogno di sonno dichiarato "spesso" è più acuto e specifico di una semplice
+    // familiarità con le pratiche corpo-mente, quindi vince se entrambe le condizioni sono vere.
+    let suggested = 'relax';
+    if (sleepDifficulty === 'spesso') {
+        suggested = 'sleep';
+    } else if (mindBodyExperience === 'spesso') {
+        suggested = 'breath';
+    }
+    document.getElementById('input-med-goal').value = suggested;
+}
+
+function onSleepDifficultyChange() { suggestMeditationGoal(); }
+function onMindBodyExperienceChange() { suggestMeditationGoal(); }
+
+// Se la persona tocca direttamente la select dell'obiettivo, la sua scelta esplicita vince per
+// il resto dell'intervista: le domande successive su sonno/esperienza non gliela sovrascrivono più.
+function markMedGoalManual() {
+    medGoalManuallySet = true;
 }
 
 function calculateAge(dobString) {
@@ -491,7 +662,8 @@ function buildFitnessState() {
         sleep: appData.sleep,
         mood: appData.mood,
         totalWorkouts: appData.totalWorkouts || 0,
-        limitations: appData.limitations || []
+        limitations: appData.limitations || [],
+        medicalCaution: !!appData.medicalCaution
     };
 }
 
@@ -783,7 +955,6 @@ function saveFeedbackAndAdjust(fb) {
         alert("Ottimo lavoro! Sessione salvata nel tuo percorso.");
     }
 }
-
 // --- MEDITAZIONE --------------------------------------------------------------
 
 function populateMeditationGoalSelect() {
@@ -1308,17 +1479,20 @@ function renderAllUI() {
     document.getElementById('prof-name').innerText = appData.username || '-';
     document.getElementById('prof-age').innerText = calculateAge(appData.dob) + (appData.dob ? " anni" : "");
     document.getElementById('prof-height').innerText = (appData.height ? appData.height + " cm" : '-');
-    const weightConditionLabels = {
-        nudo: 'nudo/a digiuno', intimo: 'solo intimo', leggero: 'abb. leggero',
-        normale: 'abb. normale', pesante: 'abb. pesante'
-    };
-    const weightConditionLabel = weightConditionLabels[appData.weightCondition] || '';
-    document.getElementById('prof-weight').innerText = appData.netWeight
-        ? appData.netWeight + " kg" + (weightConditionLabel ? " (" + weightConditionLabel + ")" : '')
-        : '-';
+    // v6.4.0: il peso netto stimato (weightAsWorn meno il peso stimato degli indumenti) è la cifra
+    // principale; il peso "sulla bilancia" così com'è stato letto resta visibile come riferimento.
+    document.getElementById('prof-weight').innerText = appData.netWeight ? appData.netWeight + " kg" : '-';
+    document.getElementById('prof-weight-asworn').innerText = appData.weightAsWorn ? appData.weightAsWorn + " kg" : '-';
     document.getElementById('prof-mood').innerText = appData.mood || '-';
     document.getElementById('prof-sleep').innerText = appData.sleep || '-';
     document.getElementById('prof-energy').innerText = appData.energy || '-';
+
+    const freqLabels = { mai: 'Mai', qualche_volta: 'Qualche volta', spesso: 'Spesso' };
+    document.getElementById('prof-sleep-difficulty').innerText = freqLabels[appData.sleepDifficulty] || '-';
+    document.getElementById('prof-mindbody-experience').innerText = freqLabels[appData.mindBodyExperience] || '-';
+
+    const cautionBox = document.getElementById('prof-medical-caution-box');
+    if (cautionBox) cautionBox.style.display = appData.medicalCaution ? 'block' : 'none';
 
     renderStatsUI();
 
