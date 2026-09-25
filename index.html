@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <!-- Fit & Mind v6.2.0 - Corpo & Spirito in equilibrio -->
+    <!-- Fit & Mind v6.4.0 - Corpo & Spirito in equilibrio -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fit & Mind v6.2.0</title>
+    <title>Fit & Mind v6.4.0</title>
     <meta name="theme-color" content="#121212">
     <meta name="description" content="Allenamento a corpo libero adattivo e meditazione guidata quotidiana, per far crescere corpo e spirito in equilibrio.">
 
@@ -147,6 +147,8 @@
 
         /* --- WIZARD ONBOARDING --- */
         .wizard-intro { font-size: 0.85rem; color: var(--accent-meditation); margin: 0 0 14px 0; line-height: 1.4; }
+        .cloth-label { display:flex; align-items:center; gap:4px; font-size:0.85rem; font-weight:normal; color:#ccc; }
+        .cloth-label input[type="checkbox"] { width:auto; }
         #profile-modal.wizard-mode .wizard-step { display: none; }
         #profile-modal.wizard-mode .wizard-step.active { display: block; }
         #profile-modal:not(.wizard-mode) .wizard-step { display: block; margin-bottom: 6px; }
@@ -430,7 +432,7 @@
 
     <header>
         <div>
-            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v6.2.0</span></h1>
+            <h1>FIT & MIND <span style="font-size:0.7rem; color:var(--text-secondary);">v6.4.0</span></h1>
             <div class="subtitle" id="user-header-name">In attesa di Login</div>
         </div>
         <div class="header-actions">
@@ -604,7 +606,8 @@
                 <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Utente:</span><strong id="prof-name">-</strong></div>
                 <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Età:</span><strong id="prof-age">-</strong></div>
                 <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Altezza:</span><strong id="prof-height">-</strong></div>
-                <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Peso Attuale:</span><strong id="prof-weight">-</strong></div>
+                <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Peso Netto Stimato:</span><strong id="prof-weight">-</strong></div>
+                <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Peso sulla bilancia:</span><strong id="prof-weight-asworn">-</strong></div>
             </div>
 
             <div class="card">
@@ -612,6 +615,11 @@
                 <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Stato d'Animo:</span><strong id="prof-mood" style="color: var(--accent);">-</strong></div>
                 <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Qualità Sonno:</span><strong id="prof-sleep">-</strong></div>
                 <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Livello Energia:</span><strong id="prof-energy">-</strong></div>
+                <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Difficoltà di sonno dichiarata:</span><strong id="prof-sleep-difficulty">-</strong></div>
+                <div class="exercise-item" style="flex-direction: row; justify-content: space-between;"><span>Esperienza yoga/pilates/respirazione:</span><strong id="prof-mindbody-experience">-</strong></div>
+                <div id="prof-medical-caution-box" style="display:none; background:#2a1414; border-left:4px solid #e05a5a; padding:10px 12px; border-radius:4px; font-size:0.8rem; color:#f2c9c9; margin-top:10px; line-height:1.4;">
+                    ⚠️ Hai indicato in intervista di dover sentire il parere del tuo medico prima di sforzi intensi. La scheda esclude in automatico salti e balzi e resta su un livello prudente, ma questo non sostituisce un consulto medico.
+                </div>
                 <button class="btn btn-secondary" onclick="openProfileModal()">Aggiorna Stato & Parametri</button>
             </div>
 
@@ -654,8 +662,7 @@
             <button class="btn btn-secondary" style="margin-top: 8px;" onclick="closeModal('login-modal')">Annulla</button>
         </div>
     </div>
-
-    <!-- MODALE ALLENAMENTO GUIDATO: accompagna passo per passo, con countdown per gli
+        <!-- MODALE ALLENAMENTO GUIDATO: accompagna passo per passo, con countdown per gli
          esercizi a tempo, pulsante "Fatto" per quelli a ripetizioni, e un riposo
          cronometrato (estendibile) tra un esercizio e il successivo. -->
     <div id="guided-modal" class="modal-overlay" style="display:none;">
@@ -693,16 +700,41 @@
                 <div class="form-group"><label>ID Utente:</label><input type="text" id="input-username" autocomplete="off"></div>
                 <div class="form-group"><label>Data di Nascita:</label><input type="date" id="input-dob"></div>
                 <div class="form-group"><label>Altezza (cm):</label><input type="number" id="input-height" min="100" max="250" step="1" value="170" onfocus="this.select()"></div>
-                <div class="form-group"><label>Peso Attuale (kg):</label><input type="number" id="input-weight" min="30" max="250" step="0.5" value="70" onfocus="this.select()"></div>
+                <div class="form-group"><label>Peso sulla bilancia ora (kg):</label><input type="number" id="input-weight" min="30" max="250" step="0.5" value="70" onfocus="this.select()" oninput="updateWeightPreview()"></div>
                 <div class="form-group">
-                    <label>Come ti sei pesato:</label>
-                    <select id="input-weight-condition">
-                        <option value="nudo">Nudo / a digiuno</option>
-                        <option value="intimo">Solo intimo</option>
-                        <option value="leggero" selected>Abbigliamento leggero (maglietta e pantaloncini)</option>
-                        <option value="normale">Abbigliamento normale (jeans e maglia)</option>
-                        <option value="pesante">Abbigliamento pesante (felpa/giacca)</option>
-                    </select>
+                    <label>Cosa indossi mentre ti pesi? (spunta tutto quello che hai addosso)</label>
+                    <p style="font-size:0.72rem; color:#888; margin:2px 0 8px 0;">Usiamo un peso medio stimato per ogni indumento per calcolare il tuo peso corporeo netto, così il dato resta confrontabile anche se ti pesi vestito in modo diverso da una volta all'altra.</p>
+
+                    <p style="font-size:0.72rem; color:#888; margin:8px 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">Intimo</p>
+                    <div class="cloth-group" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-underwear" data-grams="60" onchange="updateWeightPreview()"> Slip/boxer</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-socks" data-grams="50" onchange="updateWeightPreview()"> Calzini</label>
+                    </div>
+
+                    <p style="font-size:0.72rem; color:#888; margin:10px 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">Sopra</p>
+                    <div class="cloth-group" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-tshirt" data-grams="150" onchange="updateWeightPreview()"> Maglietta/canotta leggera</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-longsleeve" data-grams="250" onchange="updateWeightPreview()"> Maglia manica lunga</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-hoodie" data-grams="600" onchange="updateWeightPreview()"> Felpa/maglione</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-jacket_light" data-grams="700" onchange="updateWeightPreview()"> Giacca leggera</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-jacket_heavy" data-grams="1200" onchange="updateWeightPreview()"> Giacca pesante/piumino</label>
+                    </div>
+
+                    <p style="font-size:0.72rem; color:#888; margin:10px 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">Sotto</p>
+                    <div class="cloth-group" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-shorts" data-grams="200" onchange="updateWeightPreview()"> Pantaloncini corti</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-leggings" data-grams="300" onchange="updateWeightPreview()"> Leggings/aderenti</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-pants" data-grams="600" onchange="updateWeightPreview()"> Jeans/pantaloni normali</label>
+                    </div>
+
+                    <p style="font-size:0.72rem; color:#888; margin:10px 0 4px 0; text-transform:uppercase; letter-spacing:0.5px;">Piedi & Accessori</p>
+                    <div class="cloth-group" style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-slippers" data-grams="250" onchange="updateWeightPreview()"> Ciabatte/pantofole</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-shoes" data-grams="600" onchange="updateWeightPreview()"> Scarpe da ginnastica</label>
+                        <label class="cloth-label"><input type="checkbox" class="cloth-check" id="cloth-accessories" data-grams="100" onchange="updateWeightPreview()"> Orologio/cintura/gioielli</label>
+                    </div>
+
+                    <p id="weight-net-preview" style="font-size:0.8rem; color: var(--accent-meditation); margin-top:8px; min-height: 1.2em;"></p>
                 </div>
             </div>
 
@@ -733,8 +765,18 @@
                         <label style="display:flex; align-items:center; gap:4px; font-size:0.85rem; font-weight:normal; color:#ccc;"><input type="checkbox" id="limit-ginocchia" style="width:auto;"> Ginocchia</label>
                         <label style="display:flex; align-items:center; gap:4px; font-size:0.85rem; font-weight:normal; color:#ccc;"><input type="checkbox" id="limit-schiena" style="width:auto;"> Schiena bassa</label>
                         <label style="display:flex; align-items:center; gap:4px; font-size:0.85rem; font-weight:normal; color:#ccc;"><input type="checkbox" id="limit-polsi_spalle" style="width:auto;"> Polsi/Spalle</label>
+                        <label style="display:flex; align-items:center; gap:4px; font-size:0.85rem; font-weight:normal; color:#ccc;"><input type="checkbox" id="limit-caviglie_piedi" style="width:auto;"> Caviglie/Piedi</label>
+                        <label style="display:flex; align-items:center; gap:4px; font-size:0.85rem; font-weight:normal; color:#ccc;"><input type="checkbox" id="limit-anche" style="width:auto;"> Anche</label>
                     </div>
-                    <p style="font-size:0.75rem; color:#888; margin-top:6px;">Escluderemo automaticamente gli esercizi più a rischio per queste zone (es. pistol squat con ginocchia, handstand con polsi/spalle).</p>
+                    <p style="font-size:0.75rem; color:#888; margin-top:6px;">Escluderemo automaticamente gli esercizi più a rischio per queste zone (es. pistol squat con ginocchia/caviglie, affondi con anche, handstand con polsi/spalle).</p>
+                </div>
+                <div class="form-group">
+                    <label>C'è un motivo di salute per cui il tuo medico ti ha raccomandato di fare attività fisica intensa solo sotto supervisione?</label>
+                    <select id="input-medical-caution">
+                        <option value="no" selected>No, nessun problema noto</option>
+                        <option value="si">Sì (es. dolore al petto durante sforzo, capogiri/svenimenti, farmaci per cuore o pressione)</option>
+                    </select>
+                    <p style="font-size:0.75rem; color:#888; margin-top:6px;">Non è una diagnosi: se rispondi "sì" partiamo dal livello più prudente ed escludiamo in automatico salti e balzi (es. burpee con salto, squat jump), ma resta comunque una buona idea sentire il parere di un medico prima di sforzi intensi.</p>
                 </div>
             </div>
 
@@ -770,14 +812,32 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Quanto spesso hai difficoltà a dormire bene, ultimamente?</label>
+                    <select id="input-sleep-difficulty" onchange="onSleepDifficultyChange()">
+                        <option value="mai" selected>Mai o quasi mai</option>
+                        <option value="qualche_volta">Qualche volta</option>
+                        <option value="spesso">Spesso</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Hai già esperienza con yoga, pilates o tecniche di respirazione?</label>
+                    <select id="input-mindbody-experience" onchange="onMindBodyExperienceChange()">
+                        <option value="mai" selected>Mai o quasi mai</option>
+                        <option value="qualche_volta">Qualche volta</option>
+                        <option value="spesso">Spesso</option>
+                    </select>
+                </div>
+                <div class="form-group">
                     <label>Obiettivo principale della pratica:</label>
-                    <select id="input-med-goal">
+                    <select id="input-med-goal" onchange="markMedGoalManual()">
                         <option value="relax">Rilassamento & De-Stress</option>
                         <option value="focus">Focus & Energia</option>
                         <option value="sleep">Preparazione al Sonno</option>
                         <option value="emotions">Gestione delle Emozioni</option>
                         <option value="grounding">Radicamento & Crescita Interiore</option>
+                        <option value="breath">Respiro Consapevole (Pranayama)</option>
                     </select>
+                    <p style="font-size:0.75rem; color:#888; margin-top:6px;">In base alle due risposte qui sopra proponiamo già un obiettivo: cambialo pure se preferisci un altro percorso.</p>
                 </div>
                 <div class="form-group">
                     <label>Preferisci una voce che ti guida, o silenzio con sottofondo?</label>
@@ -841,9 +901,31 @@
                 <button onclick="closeModal('changelog-modal')" style="background:none; border:none; color:#aaa; font-size:1.2rem; cursor:pointer;">✕</button>
             </div>
 
+            <!-- v6.4.0 -->
+            <div class="changelog-version">
+                <span class="version-tag">v6.4.0</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-major">MAJOR</span> Il peso ora si dichiara insieme a cosa si indossa: nell'intervista e nella modifica rapida del profilo è comparso un elenco di indumenti (intimo, sopra, sotto, piedi, accessori) da spuntare al momento in cui ci si pesa. L'app sottrae dal peso letto sulla bilancia una stima media del peso di ciascun capo selezionato, per arrivare a un "peso netto stimato" più confrontabile nel tempo anche se ci si pesa vestiti in modo diverso da una volta all'altra.</li>
+                    <li><span class="badge-type badge-minor">MINOR</span> L'anteprima del peso netto si aggiorna dal vivo mentre si spuntano gli indumenti o si modifica il peso letto, prima ancora di salvare. Il tab Profilo mostra sia il peso netto stimato sia il peso "sulla bilancia" così com'è stato inserito.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Chi aveva già un profilo con la vecchia domanda "Come ti sei pesato" (nudo/intimo/leggero/normale/pesante) vede alla prima modifica un elenco di indumenti pre-spuntato in modo coerente con la vecchia risposta, così non deve ripartire da zero.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Le stime di peso di ogni indumento (es. maglietta leggera ~150g, jeans ~600g, felpa ~600g, scarpe da ginnastica ~600g) sono valori medi indicativi, non una misura precisa del capo che si indossa realmente: restano pensate per rendere più stabile il confronto nel tempo, non per una precisione clinica.</li>
+                </ul>
+            </div>
+
+            <!-- v6.3.0 -->
+            <div class="changelog-version">
+                <span class="version-tag">v6.3.0</span>
+                <ul class="changelog-list">
+                    <li><span class="badge-type badge-major">MAJOR</span> Intervista di creazione profilo arricchita con 4 nuove domande mirate, ispirate a strumenti reali di screening pre-attività fisica (PAR-Q) e alle prassi di onboarding di app di meditazione: uno screening di prontezza cardiovascolare/sforzi intensi, due nuove zone tra le limitazioni fisiche (Caviglie/Piedi, Anche), la frequenza di difficoltà nel dormire bene, e l'esperienza pregressa con yoga/pilates/respirazione.</li>
+                    <li><span class="badge-type badge-minor">MINOR</span> Le nuove risposte non sono solo informative: chi segnala di dover sentire il proprio medico prima di sforzi intensi parte dal Livello 1 e vede esclusi in automatico gli esercizi con salti/balzi (es. burpee con salto, squat jump, skater jump — resta disponibile la variante Burpee senza Salto); chi segnala spesso difficoltà di sonno o già esperienza con pratiche corpo-mente vede l'obiettivo di meditazione consigliato aggiornarsi dal vivo (rispettivamente verso "Preparazione al Sonno" o "Respiro Consapevole"), sempre modificabile a mano.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Corretto un piccolo difetto introdotto in v6.2.0: il nuovo obiettivo "Respiro Consapevole (Pranayama)" non compariva nel menu a tendina dell'intervista di creazione profilo (era presente solo nella schermata Meditazione), quindi non poteva essere scelto come obiettivo di partenza.</li>
+                    <li><span class="badge-type badge-patch">PATCH</span> Nessuna diagnosi o dato clinico viene richiesto o salvato: lo screening di prontezza fisica è un'unica domanda pratica sì/no (non le 7 domande cliniche del PAR-Q originale), pensata per restare un'iscrizione semplice e non un modulo medico.</li>
+                </ul>
+            </div>
+
             <!-- v6.2.0 -->
             <div class="changelog-version">
-                <span class="version-tag">v6.2.0</span> <small style="color:#aaa;">(Versione Attuale)</small>
+                <span class="version-tag">v6.2.0</span>
                 <ul class="changelog-list">
                     <li><span class="badge-type badge-minor">MINOR</span> Corpo: aggiunti 10 nuovi esercizi ispirati a yoga e pilates dentro Riscaldamento, Defaticamento e Core (es. Cane a Testa in Giù, Torsione della Colonna da Seduti, Saluto al Sole, Il Cento e Ponte Pilates) — si mescolano a quelli già presenti, nessuna categoria nuova da imparare.</li>
                     <li><span class="badge-type badge-minor">MINOR</span> Mente: nuovo sesto obiettivo "Respiro Consapevole (Pranayama)" con un cerchio animato che scandisce la tecnica di respirazione yogica 4-7-8 (inspira 4s, trattieni 7s, espira 8s) — utilizzabile sia in modalità Guidata sia Libera.</li>
@@ -1010,7 +1092,7 @@
     </div>
 
     <footer>
-        Fit & Mind v6.2.0 - Corpo & Spirito in equilibrio<br>
+        Fit & Mind v6.4.0 - Corpo & Spirito in equilibrio<br>
         <span onclick="openChangelogModal()">Visualizza Changelog Completo</span>
     </footer>
 
