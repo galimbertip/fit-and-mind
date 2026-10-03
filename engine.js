@@ -16,7 +16,7 @@ const WARMUP_POOL = [
     { id: 'w4', name: 'Affondi in Camminata', qty: '10', unit: 'rep', desc: 'Passo lungo in avanti, scendi piegando entrambe le ginocchia a 90°, alterna gamba.' },
     { id: 'w5', name: 'Cat-Cow (Mobilità Colonna)', qty: '8', unit: 'rep', desc: 'Carponi, alterna inarcamento e arrotondamento della schiena seguendo il respiro.' },
     { id: 'w6', name: 'Squat Mobility Lento', qty: '10', unit: 'rep', desc: 'Scendi lentamente in squat controllando il movimento, senza rimbalzare.' },
-    { id: 'w7', name: 'Jumping Jack Leggeri', qty: '30', unit: 'sec', desc: 'Apri e chiudi braccia e gambe a ritmo moderato per scaldare tutto il corpo.' },
+    { id: 'w7', name: 'Jumping Jack Leggeri', qty: '30', unit: 'sec', avoidIf: ['alto_impatto'], desc: 'Apri e chiudi braccia e gambe a ritmo moderato per scaldare tutto il corpo.' },
     { id: 'w8', name: 'Rotazione Busto', qty: '10', unit: 'rep', desc: 'Piedi larghi, ruota delicatamente il busto a destra e sinistra.' },
 ];
 
@@ -55,23 +55,30 @@ const CORE_POOL = [
     { id: 'k16', name: 'L-Sit Una Gamba', unit: 'sec', unlockLevel: 7, repsBase: 6, repsInc: 3, avoidIf: ['polsi_spalle'], desc: 'Come il Tuck, ma distendi una gamba alla volta mantenendo l\'altra raccolta: propedeutico all\'L-Sit completo.' },
     { id: 'k17', name: 'L-Sit Completo', unit: 'sec', unlockLevel: 9, repsBase: 5, repsInc: 2, avoidIf: ['polsi_spalle'], desc: 'Mani a terra, entrambe le gambe tese e sollevate parallele al suolo: massima compressione addominale.' },
     { id: 'k18', name: 'Dragon Flag Negativo', unit: 'rep', unlockLevel: 9, repsBase: 4, repsInc: 1, avoidIf: ['schiena'], desc: 'Sdraiato, mani sotto la testa per appoggio: solleva il corpo teso in verticale poi scendi lentissimo controllando con l\'addome, ginocchia piegate se serve. Fermati subito se la schiena si inarca o senti dolore.' },
+    // Varianti IN PIEDI (nessun appoggio a terra) — utili per chi non ha spazio per un
+    // tappetino, si allena fuori casa, o preferisce evitare il passaggio a terra/alzata.
+    // Verificate su un video dimostrativo reale (circuito "standing abs, no equipment",
+    // forma pulita, conteggio serie/ripetizioni a schermo) prima di integrarle.
+    { id: 'k19', name: 'Marcia in Piedi con Braccia in Alto', unit: 'sec', unlockLevel: 1, repsBase: 20, repsInc: 5, desc: 'In piedi, mani giunte sopra la testa: solleva alternativamente un ginocchio alla volta a ritmo controllato, mantenendo le braccia tese e il busto stabile senza inarcare la schiena.' },
+    { id: 'k20', name: 'Alzata Ginocchia a Braccia Aperte', unit: 'sec', unlockLevel: 1, repsBase: 20, repsInc: 5, desc: 'In piedi, braccia tese lateralmente all\'altezza delle spalle: solleva alternativamente un ginocchio, restando stabile sulla gamba d\'appoggio a ogni ripetizione.' },
+    { id: 'k21', name: 'Crunch in Piedi Gomito-Ginocchio', unit: 'rep/lato', unlockLevel: 2, repsBase: 8, repsInc: 2, desc: 'In piedi, una mano alla tempia: porta il gomito verso il ginocchio opposto che sale, contraendo l\'obliquo, poi torna in posizione eretta e alterna lato.' },
 ];
 
 // CIRCUIT = full body / cardio, componente "brucia calorie" della sessione.
 const CIRCUIT_POOL = [
     { id: 's1', name: 'Squat a Corpo Libero', unit: 'rep', unlockLevel: 1, base: 12, inc: 2, maxVal: 30, desc: 'Piedi larghezza spalle, scendi spingendo il bacino indietro, ginocchia in linea con i piedi.' },
     { id: 's2', name: 'Affondi Alternati', unit: 'rep/lato', unlockLevel: 1, base: 10, inc: 2, maxVal: 20, desc: 'Passo avanti, scendi piegando entrambe le ginocchia a 90°, torna su e alterna.' },
-    { id: 's3', name: 'Jumping Jack', unit: 'sec', unlockLevel: 1, base: 30, inc: 5, maxVal: 60, desc: 'Apri e chiudi gambe e braccia con un piccolo salto, ritmo sostenuto.' },
+    { id: 's3', name: 'Jumping Jack', unit: 'sec', unlockLevel: 1, base: 30, inc: 5, maxVal: 60, avoidIf: ['alto_impatto'], desc: 'Apri e chiudi gambe e braccia con un piccolo salto, ritmo sostenuto.' },
     { id: 's4', name: 'Push-Up sulle Ginocchia', unit: 'rep', unlockLevel: 1, base: 8, inc: 2, maxVal: 20, desc: 'Ginocchia a terra, mani poco più larghe delle spalle, scendi controllando il petto verso terra.' },
     { id: 's5', name: 'Push-Up', unit: 'rep', unlockLevel: 3, base: 6, inc: 2, maxVal: 20, desc: 'Corpo in linea retta su mani e punte dei piedi, scendi fino a sfiorare terra col petto.' },
     { id: 's6', name: 'Glute Bridge', unit: 'rep', unlockLevel: 1, base: 12, inc: 2, maxVal: 25, desc: 'Supino, ginocchia piegate, solleva il bacino contraendo i glutei.' },
-    { id: 's7', name: 'High Knees', unit: 'sec', unlockLevel: 2, base: 20, inc: 5, maxVal: 45, desc: 'Corri sul posto portando le ginocchia il più in alto possibile.' },
+    { id: 's7', name: 'High Knees', unit: 'sec', unlockLevel: 2, base: 20, inc: 5, maxVal: 45, avoidIf: ['alto_impatto'], desc: 'Corri sul posto portando le ginocchia il più in alto possibile.' },
     { id: 's8', name: 'Wall Sit', unit: 'sec', unlockLevel: 2, base: 20, inc: 5, maxVal: 60, desc: 'Schiena al muro, scendi come su una sedia immaginaria a 90°, mantieni la posizione.' },
     { id: 's9', name: 'Burpee senza Salto', unit: 'rep', unlockLevel: 3, base: 6, inc: 1, maxVal: 15, desc: 'Da in piedi scendi in plank, torna in piedi senza il salto finale.' },
-    { id: 's10', name: 'Plank Jack', unit: 'rep', unlockLevel: 3, base: 10, inc: 2, maxVal: 25, desc: 'In plank, apri e chiudi le gambe con un piccolo salto mantenendo il bacino stabile.' },
-    { id: 's11', name: 'Squat Jump', unit: 'rep', unlockLevel: 4, base: 8, inc: 2, maxVal: 20, desc: 'Esegui uno squat e spingi verso l\'alto in un salto, atterra morbido e riparti.' },
-    { id: 's12', name: 'Burpee Completo', unit: 'rep', unlockLevel: 5, base: 6, inc: 1, maxVal: 15, desc: 'Da in piedi scendi in plank, push-up opzionale, torna in piedi con salto finale.' },
-    { id: 's13', name: 'Skater Jump', unit: 'rep/lato', unlockLevel: 4, base: 8, inc: 2, maxVal: 18, desc: 'Salta lateralmente da una gamba all\'altra come un pattinatore, mantieni l\'equilibrio.' },
+    { id: 's10', name: 'Plank Jack', unit: 'rep', unlockLevel: 3, base: 10, inc: 2, maxVal: 25, avoidIf: ['alto_impatto'], desc: 'In plank, apri e chiudi le gambe con un piccolo salto mantenendo il bacino stabile.' },
+    { id: 's11', name: 'Squat Jump', unit: 'rep', unlockLevel: 4, base: 8, inc: 2, maxVal: 20, avoidIf: ['alto_impatto'], desc: 'Esegui uno squat e spingi verso l\'alto in un salto, atterra morbido e riparti.' },
+    { id: 's12', name: 'Burpee Completo', unit: 'rep', unlockLevel: 5, base: 6, inc: 1, maxVal: 15, avoidIf: ['alto_impatto'], desc: 'Da in piedi scendi in plank, push-up opzionale, torna in piedi con salto finale.' },
+    { id: 's13', name: 'Skater Jump', unit: 'rep/lato', unlockLevel: 4, base: 8, inc: 2, maxVal: 18, avoidIf: ['alto_impatto'], desc: 'Salta lateralmente da una gamba all\'altra come un pattinatore, mantieni l\'equilibrio.' },
     // Calisthenics verificati (fonti: GMB Fitness, PowerliftingTechnique, NASM) — progressioni reali,
     // non le versioni "instant" mostrate nei reel. Il Nordic Curl NON è stato incluso: le fonti (SimpliFaster)
     // lo sconsigliano per chi si allena a casa senza supervisione, per il rischio su ginocchio/menisco.
@@ -82,6 +89,9 @@ const CIRCUIT_POOL = [
     { id: 's18', name: 'Pistol Squat', unit: 'rep/lato', unlockLevel: 9, base: 3, inc: 1, maxVal: 8, avoidIf: ['ginocchia'], desc: 'Squat su una gamba sola completo, senza appoggio, l\'altra gamba tesa in avanti. Rispetta la tua mobilità di caviglia: non forzare la profondità.' },
     { id: 's19', name: 'Archer Push-Up', unit: 'rep/lato', unlockLevel: 8, base: 4, inc: 1, maxVal: 10, avoidIf: ['polsi_spalle'], desc: 'Mani molto più larghe delle spalle: piega un braccio spostando il peso di lato, l\'altro resta teso. Passo intermedio verso il push-up a un braccio.' },
     { id: 's20', name: 'Wall Walk (verso Handstand)', unit: 'rep', unlockLevel: 6, base: 3, inc: 1, maxVal: 8, avoidIf: ['polsi_spalle'], desc: 'Parti in plank con i piedi al muro, cammina con le mani indietro mentre i piedi salgono sulla parete, il più vicino possibile alla verticale. Scendi con controllo.' },
+    // Verificato sullo stesso video dimostrativo citato sopra per CORE_POOL (circuito "standing
+    // abs, no equipment"): è la variante con salto del blocco, quindi avoidIf alto_impatto.
+    { id: 's21', name: 'Squat Jack con Braccia in Alto', unit: 'rep', unlockLevel: 2, base: 8, inc: 2, maxVal: 20, avoidIf: ['alto_impatto'], desc: 'Da piedi uniti, salta aprendo le gambe oltre la larghezza delle spalle mentre porti le braccia unite sopra la testa, poi richiudi gambe e braccia tornando alla posizione di partenza.' },
 ];
 
 // --- HELPER ---------------------------------------------------------------
@@ -207,10 +217,17 @@ function generateWorkout(state, rng) {
     }
 
     const exclude = state.lastExerciseIds || [];
-    const warmup = pickN(WARMUP_POOL, 3, exclude, rng);
-    const cooldown = pickN(COOLDOWN_POOL, 2, exclude, rng);
-
     const limitations = state.limitations || [];
+
+    // NOTA (fix): prima qui Riscaldamento e Defaticamento non passavano da
+    // filterByLimitations, a differenza di Core e Circuito — innocuo finché
+    // nessun esercizio di questi due pool aveva un avoidIf, ma w7 "Jumping Jack
+    // Leggeri" ora lo ha (vedi sotto), quindi il filtro va applicato anche qui.
+    const warmupPoolFiltered = filterByLimitations(WARMUP_POOL, limitations);
+    const cooldownPoolFiltered = filterByLimitations(COOLDOWN_POOL, limitations);
+    const warmup = pickN(warmupPoolFiltered, 3, exclude, rng);
+    const cooldown = pickN(cooldownPoolFiltered, 2, exclude, rng);
+
     const corePoolAtLevel = filterByLimitations(poolForLevel(CORE_POOL, level), limitations);
     const circuitPoolAtLevel = filterByLimitations(poolForLevel(CIRCUIT_POOL, level), limitations);
 
