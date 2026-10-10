@@ -703,9 +703,9 @@ const EXERCISE_POSE_MAP = {
     k1: 'plank', k2: 'plank', k3: 'crunch', k4: 'leg-raise', k5: 'crunch', k6: 'seated-twist', k7: 'side-plank', k8: 'plank',
     k9: 'dead-bug', k10: 'superman', k11: 'plank', k12: 'v-up', k13: 'hollow-hold', k14: 'torso-twist',
     k15: 'l-sit', k16: 'l-sit', k17: 'l-sit', k18: 'dragon-flag',
-    // k19/k20/k21: varianti in piedi, nessuna posa sdraiata/supina è adatta — riusiamo
+    // k19/k20/k21/k22: varianti in piedi, nessuna posa sdraiata/supina è adatta — riusiamo
     // 'marching' (ginocchia alternate) e 'torso-twist' (rotazione busto in piedi).
-    k19: 'marching', k20: 'marching', k21: 'torso-twist',
+    k19: 'marching', k20: 'marching', k21: 'torso-twist', k22: 'marching',
     s1: 'squat', s2: 'lunge', s3: 'jumping-jack', s4: 'push-up', s5: 'push-up', s6: 'glute-bridge', s7: 'marching', s8: 'wall-sit',
     s9: 'burpee', s10: 'plank', s11: 'squat', s12: 'burpee', s13: 'lunge', s14: 'lunge', s15: 'pike-push-up',
     s16: 'pistol-squat', s17: 'pistol-squat', s18: 'pistol-squat', s19: 'push-up', s20: 'wall-walk', s21: 'jumping-jack'

@@ -62,6 +62,11 @@ const CORE_POOL = [
     { id: 'k19', name: 'Marcia in Piedi con Braccia in Alto', unit: 'sec', unlockLevel: 1, repsBase: 20, repsInc: 5, desc: 'In piedi, mani giunte sopra la testa: solleva alternativamente un ginocchio alla volta a ritmo controllato, mantenendo le braccia tese e il busto stabile senza inarcare la schiena.' },
     { id: 'k20', name: 'Alzata Ginocchia a Braccia Aperte', unit: 'sec', unlockLevel: 1, repsBase: 20, repsInc: 5, desc: 'In piedi, braccia tese lateralmente all\'altezza delle spalle: solleva alternativamente un ginocchio, restando stabile sulla gamba d\'appoggio a ogni ripetizione.' },
     { id: 'k21', name: 'Crunch in Piedi Gomito-Ginocchio', unit: 'rep/lato', unlockLevel: 2, repsBase: 8, repsInc: 2, desc: 'In piedi, una mano alla tempia: porta il gomito verso il ginocchio opposto che sale, contraendo l\'obliquo, poi torna in posizione eretta e alterna lato.' },
+    // Verificato su un video dimostrativo reale (ginocchia alternate con mani
+    // appoggiate al muro) prima di integrarlo. Variante accessibile della
+    // marcia in piedi k19/k20: l'appoggio alle mani riduce il lavoro di
+    // equilibrio, utile come punto di partenza prima delle varianti libere.
+    { id: 'k22', name: 'Alzata Ginocchia con Appoggio al Muro', unit: 'sec', unlockLevel: 1, repsBase: 20, repsInc: 5, desc: 'In piedi di fronte a un muro, mani appoggiate all\'altezza delle spalle e busto leggermente inclinato in avanti: solleva alternativamente un ginocchio verso il petto a ritmo controllato, usando l\'appoggio solo per l\'equilibrio, non per spingere.' },
 ];
 
 // CIRCUIT = full body / cardio, componente "brucia calorie" della sessione.
